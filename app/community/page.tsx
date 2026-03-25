@@ -37,9 +37,12 @@ export default function CommunityPage() {
   const [searchResults, setSearchResults] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchPosts = async () => {
+      if (loading) return;
+      setLoading(true);
       const data = await getCommunityPosts(pageNumber);
       if (data.length < 10) {
         setHasMorePosts(false);
@@ -58,6 +61,7 @@ export default function CommunityPage() {
       setCategories((prevCategories) => [...new Set([...prevCategories, ...uniqueCategories])]);
       const uniqueTags = [...new Set(data.flatMap((post) => post.tags || []))];
       setTags((prevTags) => [...new Set([...prevTags, ...uniqueTags])]);
+      setLoading(false);
     };
     fetchPosts();
   }, [pageNumber]);
@@ -70,7 +74,7 @@ export default function CommunityPage() {
         const filtered = posts.filter((post) => {
           const searchCondition = post.content.toLowerCase().includes(searchQuery.toLowerCase()) || post.author.toLowerCase().includes(searchQuery.toLowerCase());
           const categoryCondition = selectedCategory === '' || post.category === selectedCategory;
-          const tagsCondition = selectedTags.length === 0 || (post.tags || []).some((tag) => selectedTags.includes(tag));
+          const tagsCondition = selectedTags.length === 0 || selectedTags.some((tag) => post.tags?.includes(tag));
           return searchCondition && categoryCondition && tagsCondition;
         });
         setFilteredPosts(filtered);
@@ -80,15 +84,19 @@ export default function CommunityPage() {
   }, [posts, searchQuery, selectedCategory, selectedTags]);
 
   const handleScroll = () => {
-    if (hasMorePosts && window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+    const scrollPosition = window.scrollY + window.innerHeight;
+    const height = document.body.offsetHeight;
+    if (scrollPosition >= height * 0.9 && hasMorePosts && !loading) {
       setPageNumber((prevPageNumber) => prevPageNumber + 1);
     }
   };
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMorePosts]);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [hasMorePosts, loading]);
 
   return (
     // your JSX code here

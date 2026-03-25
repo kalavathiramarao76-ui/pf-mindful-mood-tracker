@@ -84,13 +84,13 @@ export default function DashboardPage() {
         community: {
           id: 'community',
           component: <Community />,
-          removable: false,
+          removable: true,
           resizable: true,
         },
         settings: {
           id: 'settings',
           component: <Settings />,
-          removable: false,
+          removable: true,
           resizable: true,
         },
       },
@@ -105,66 +105,69 @@ export default function DashboardPage() {
         const newComponents = { ...prevConfig.components };
         const activeComponent = newComponents[active.id];
         const overComponent = newComponents[over.id];
-        const activeLayout = newLayout[active.id];
-        const overLayout = newLayout[over.id];
-        newLayout[active.id] = overLayout;
-        newLayout[over.id] = activeLayout;
+        if (activeComponent && overComponent) {
+          newLayout[active.id] = newLayout[over.id];
+          newLayout[over.id] = { x: active.x, y: active.y, width: active.width, height: active.height };
+          newComponents[active.id].component = overComponent.component;
+          newComponents[over.id].component = activeComponent.component;
+        }
         return { layout: newLayout, components: newComponents };
       });
     }
   };
 
-  const handleAddComponent = (component: Component) => {
+  const handleRemoveComponent = (id: string) => {
     setDashboardConfig((prevConfig) => {
-      const newComponents = { ...prevConfig.components };
-      newComponents[component.id] = {
-        id: component.id,
-        component: component.component,
-        removable: true,
-        resizable: true,
-      };
       const newLayout = { ...prevConfig.layout };
-      newLayout[component.id] = { x: 0, y: Object.keys(newLayout).length, width: 1, height: 1 };
+      const newComponents = { ...prevConfig.components };
+      delete newLayout[id];
+      delete newComponents[id];
       return { layout: newLayout, components: newComponents };
     });
   };
 
-  const handleRemoveComponent = (id: string) => {
+  const handleAddComponent = (component: JSX.Element) => {
     setDashboardConfig((prevConfig) => {
-      const newComponents = { ...prevConfig.components };
-      delete newComponents[id];
       const newLayout = { ...prevConfig.layout };
-      delete newLayout[id];
+      const newComponents = { ...prevConfig.components };
+      const newId = `component-${Object.keys(newComponents).length}`;
+      newLayout[newId] = { x: 0, y: 0, width: 1, height: 1 };
+      newComponents[newId] = {
+        id: newId,
+        component,
+        removable: true,
+        resizable: true,
+      };
       return { layout: newLayout, components: newComponents };
     });
   };
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                top: `${dashboardConfig.layout[id].y * 100}%`,
-                left: `${dashboardConfig.layout[id].x * 100}%`,
-                width: `${dashboardConfig.layout[id].width * 100}%`,
-                height: `${dashboardConfig.layout[id].height * 100}%`,
-              }}
-            >
-              {dashboardConfig.components[id].component}
-              {dashboardConfig.components[id].removable && (
-                <button onClick={() => handleRemoveComponent(id)}>Remove</button>
-              )}
-            </div>
-          ))}
-          <button onClick={() => handleAddComponent({ id: 'newComponent', component: <div>New Component</div> })}>
-            Add Component
-          </button>
-        </DashboardLayout>
-      </SortableContext>
+      <DashboardLayout>
+        {Object.keys(dashboardConfig.layout).map((id) => (
+          <div
+            key={id}
+            style={{
+              position: 'absolute',
+              left: `${dashboardConfig.layout[id].x * 100}%`,
+              top: `${dashboardConfig.layout[id].y * 100}%`,
+              width: `${dashboardConfig.layout[id].width * 100}%`,
+              height: `${dashboardConfig.layout[id].height * 100}%`,
+            }}
+          >
+            {dashboardConfig.components[id].component}
+            {dashboardConfig.components[id].removable && (
+              <button onClick={() => handleRemoveComponent(id)}>Remove</button>
+            )}
+          </div>
+        ))}
+        <button onClick={() => handleAddComponent(<MoodTracker />)}>Add Mood Tracker</button>
+        <button onClick={() => handleAddComponent(<Recommendations />)}>Add Recommendations</button>
+        <button onClick={() => handleAddComponent(<Goals />)}>Add Goals</button>
+        <button onClick={() => handleAddComponent(<Community />)}>Add Community</button>
+        <button onClick={() => handleAddComponent(<Settings />)}>Add Settings</button>
+      </DashboardLayout>
     </DndContext>
   );
 }
