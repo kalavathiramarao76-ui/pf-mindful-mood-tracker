@@ -19,6 +19,18 @@ interface Layout {
   [key: string]: { x: number; y: number; width: number; height: number };
 }
 
+interface DashboardConfig {
+  layout: Layout;
+  components: {
+    [key: string]: {
+      id: string;
+      component: JSX.Element;
+      removable: boolean;
+      resizable: boolean;
+    };
+  };
+}
+
 export default function DashboardPage() {
   const [moodData, setMoodData] = useState(() => {
     const storedMoodData = localStorage.getItem('moodData');
@@ -40,14 +52,48 @@ export default function DashboardPage() {
     const storedSettingsData = localStorage.getItem('settingsData');
     return storedSettingsData ? JSON.parse(storedSettingsData) : {};
   });
-  const [layout, setLayout] = useState(() => {
-    const storedLayout = localStorage.getItem('layout');
-    return storedLayout ? JSON.parse(storedLayout) : {
-      moodTracker: { x: 0, y: 0, width: 1, height: 1 },
-      recommendations: { x: 1, y: 0, width: 1, height: 1 },
-      goals: { x: 0, y: 1, width: 1, height: 1 },
-      community: { x: 1, y: 1, width: 1, height: 1 },
-      settings: { x: 0, y: 2, width: 1, height: 1 },
+  const [dashboardConfig, setDashboardConfig] = useState(() => {
+    const storedDashboardConfig = localStorage.getItem('dashboardConfig');
+    return storedDashboardConfig ? JSON.parse(storedDashboardConfig) : {
+      layout: {
+        moodTracker: { x: 0, y: 0, width: 1, height: 1 },
+        recommendations: { x: 1, y: 0, width: 1, height: 1 },
+        goals: { x: 0, y: 1, width: 1, height: 1 },
+        community: { x: 1, y: 1, width: 1, height: 1 },
+        settings: { x: 0, y: 2, width: 1, height: 1 },
+      },
+      components: {
+        moodTracker: {
+          id: 'moodTracker',
+          component: <MoodTracker />,
+          removable: false,
+          resizable: true,
+        },
+        recommendations: {
+          id: 'recommendations',
+          component: <Recommendations />,
+          removable: false,
+          resizable: true,
+        },
+        goals: {
+          id: 'goals',
+          component: <Goals />,
+          removable: false,
+          resizable: true,
+        },
+        community: {
+          id: 'community',
+          component: <Community />,
+          removable: false,
+          resizable: true,
+        },
+        settings: {
+          id: 'settings',
+          component: <Settings />,
+          removable: false,
+          resizable: true,
+        },
+      },
     };
   });
 
@@ -71,70 +117,49 @@ export default function DashboardPage() {
       setCommunityData(newCommunityData);
       localStorage.setItem('communityData', JSON.stringify(newCommunityData));
     };
-    const handleSettingsDataChange = (newSettingsData) => {
-      setSettingsData(newSettingsData);
-      localStorage.setItem('settingsData', JSON.stringify(newSettingsData));
-    };
-
-    return () => {
-      handleMoodDataChange = () => { };
-      handleGoalDataChange = () => { };
-      handleRecommendationDataChange = () => { };
-      handleCommunityDataChange = () => { };
-      handleSettingsDataChange = () => { };
+    const handleDashboardConfigChange = (newDashboardConfig) => {
+      setDashboardConfig(newDashboardConfig);
+      localStorage.setItem('dashboardConfig', JSON.stringify(newDashboardConfig));
     };
   }, []);
 
-  const components: Component[] = [
-    { id: 'moodTracker', component: <MoodTracker /> },
-    { id: 'recommendations', component: <Recommendations /> },
-    { id: 'goals', component: <Goals /> },
-    { id: 'community', component: <Community /> },
-    { id: 'settings', component: <Settings /> },
-  ];
-
   const handleDragEnd = (event) => {
     const { active, over } = event;
-
     if (active.id !== over.id) {
-      const newLayout: Layout = { ...layout };
-      const activeComponent = components.find((component) => component.id === active.id);
-      const overComponent = components.find((component) => component.id === over.id);
-
-      if (activeComponent && overComponent) {
-        const activeRect = activeComponent.component.getBoundingClientRect();
-        const overRect = overComponent.component.getBoundingClientRect();
-
-        newLayout[active.id] = {
-          x: overRect.left - activeRect.left,
-          y: overRect.top - activeRect.top,
-          width: activeRect.width,
-          height: activeRect.height,
-        };
-
-        setLayout(newLayout);
-        localStorage.setItem('layout', JSON.stringify(newLayout));
-      }
+      const newLayout = { ...dashboardConfig.layout };
+      const newComponents = { ...dashboardConfig.components };
+      const activeComponent = newComponents[active.id];
+      const overComponent = newComponents[over.id];
+      const activeLayout = newLayout[active.id];
+      const overLayout = newLayout[over.id];
+      newLayout[active.id] = overLayout;
+      newLayout[over.id] = activeLayout;
+      handleDashboardConfigChange({ layout: newLayout, components: newComponents });
     }
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
-      <SortableContext items={components} strategy={rectSortingStrategy}>
-        <DashboardLayout>
-          {components.map((component) => (
-            <div key={component.id} style={{
-              position: 'absolute',
-              left: `${layout[component.id].x}px`,
-              top: `${layout[component.id].y}px`,
-              width: `${layout[component.id].width}px`,
-              height: `${layout[component.id].height}px`,
-            }}>
+    <DndContext onDragEnd={handleDragEnd}>
+      <DashboardLayout>
+        {Object.keys(dashboardConfig.components).map((componentId) => {
+          const component = dashboardConfig.components[componentId];
+          const layout = dashboardConfig.layout[componentId];
+          return (
+            <div
+              key={componentId}
+              style={{
+                position: 'absolute',
+                left: `${layout.x * 100}%`,
+                top: `${layout.y * 100}%`,
+                width: `${layout.width * 100}%`,
+                height: `${layout.height * 100}%`,
+              }}
+            >
               {component.component}
             </div>
-          ))}
-        </DashboardLayout>
-      </SortableContext>
+          );
+        })}
+      </DashboardLayout>
     </DndContext>
   );
 }
