@@ -68,12 +68,22 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col items-center justify-center h-screen">
-        <MoodTracker moodData={moodData} />
-        <Recommendations recommendationData={recommendationData} />
-        <Goals goalData={goalData} />
-        <Community communityData={communityData} />
-        <Settings settingsData={settingsData} />
+      <div className="flex flex-col items-center justify-center h-screen md:flex-row md:justify-around">
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+          <MoodTracker moodData={moodData} />
+        </div>
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+          <Recommendations recommendationData={recommendationData} />
+        </div>
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+          <Goals goalData={goalData} />
+        </div>
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+          <Community communityData={communityData} />
+        </div>
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+          <Settings settingsData={settingsData} />
+        </div>
       </div>
     </DashboardLayout>
   );

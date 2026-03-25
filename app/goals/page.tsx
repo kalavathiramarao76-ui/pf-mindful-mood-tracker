@@ -1,5 +1,3 @@
-use client;
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Goal } from '../types';
@@ -8,7 +6,7 @@ import AddGoalForm from '../components/AddGoalForm';
 
 export default function GoalsPage() {
   const router = useRouter();
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goals, setGoals] = useState<Map<number, Goal>>(new Map());
   const [newGoal, setNewGoal] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedGoal, setEditedGoal] = useState<Goal | null>(null);
@@ -16,16 +14,19 @@ export default function GoalsPage() {
   useEffect(() => {
     const storedGoals = localStorage.getItem('goals');
     if (storedGoals) {
-      setGoals(JSON.parse(storedGoals));
+      const parsedGoals: Goal[] = JSON.parse(storedGoals);
+      const goalsMap = new Map<number, Goal>();
+      parsedGoals.forEach((goal) => goalsMap.set(goal.id, goal));
+      setGoals(goalsMap);
     }
   }, []);
 
   const handleAddGoal = () => {
     if (newGoal.trim() !== '') {
       const goal: Goal = { id: Date.now(), title: newGoal, completed: false };
-      setGoals([...goals, goal]);
+      setGoals((prevGoals) => new Map([...prevGoals, [goal.id, goal]]));
       setNewGoal('');
-      localStorage.setItem('goals', JSON.stringify([...goals, goal]));
+      localStorage.setItem('goals', JSON.stringify([...goals].map(([_, goal]) => goal)));
     }
   };
 
@@ -35,25 +36,35 @@ export default function GoalsPage() {
   };
 
   const handleSaveEditedGoal = (goal: Goal) => {
-    const updatedGoals = goals.map((g) => (g.id === goal.id ? goal : g));
-    setGoals(updatedGoals);
+    setGoals((prevGoals) => {
+      const updatedGoals = new Map([...prevGoals]);
+      updatedGoals.set(goal.id, goal);
+      return updatedGoals;
+    });
     setIsEditing(false);
     setEditedGoal(null);
-    localStorage.setItem('goals', JSON.stringify(updatedGoals));
+    localStorage.setItem('goals', JSON.stringify([...goals].map(([_, goal]) => goal)));
   };
 
   const handleDeleteGoal = (id: number) => {
-    const updatedGoals = goals.filter((goal) => goal.id !== id);
-    setGoals(updatedGoals);
-    localStorage.setItem('goals', JSON.stringify(updatedGoals));
+    setGoals((prevGoals) => {
+      const updatedGoals = new Map([...prevGoals]);
+      updatedGoals.delete(id);
+      return updatedGoals;
+    });
+    localStorage.setItem('goals', JSON.stringify([...goals].map(([_, goal]) => goal)));
   };
 
   const handleToggleCompleted = (id: number) => {
-    const updatedGoals = goals.map((goal) =>
-      goal.id === id ? { ...goal, completed: !goal.completed } : goal
-    );
-    setGoals(updatedGoals);
-    localStorage.setItem('goals', JSON.stringify(updatedGoals));
+    setGoals((prevGoals) => {
+      const updatedGoals = new Map([...prevGoals]);
+      const goal = updatedGoals.get(id);
+      if (goal) {
+        updatedGoals.set(id, { ...goal, completed: !goal.completed });
+      }
+      return updatedGoals;
+    });
+    localStorage.setItem('goals', JSON.stringify([...goals].map(([_, goal]) => goal)));
   };
 
   return (
@@ -64,9 +75,9 @@ export default function GoalsPage() {
         setNewGoal={setNewGoal}
         handleAddGoal={handleAddGoal}
       />
-      {goals.length > 0 ? (
+      {goals.size > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {goals.map((goal) => (
+          {[...goals].map(([_, goal]) => (
             <GoalCard
               key={goal.id}
               goal={goal}
@@ -87,20 +98,8 @@ export default function GoalsPage() {
               type="text"
               value={editedGoal.title}
               onChange={(e) => setEditedGoal({ ...editedGoal, title: e.target.value })}
-              className="w-full p-2 border border-gray-300 rounded-md"
             />
-            <button
-              onClick={() => handleSaveEditedGoal(editedGoal)}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mt-2"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md mt-2 ml-2"
-            >
-              Cancel
-            </button>
+            <button onClick={() => handleSaveEditedGoal(editedGoal)}>Save</button>
           </div>
         </div>
       )}
