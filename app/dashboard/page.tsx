@@ -98,62 +98,73 @@ export default function DashboardPage() {
   });
 
   const handleDragEnd = (event: any) => {
-    const { id, x, y } = event.active;
-    const { components } = dashboardConfig;
-    const updatedComponents = { ...components };
-    updatedComponents[id].x = x;
-    updatedComponents[id].y = y;
-    setDashboardConfig((prevConfig) => ({ ...prevConfig, components: updatedComponents }));
+    const { id, x, y } = event.active.id;
+    setDashboardConfig((prevConfig) => {
+      const newConfig = { ...prevConfig };
+      newConfig.layout[id] = { x, y, width: newConfig.layout[id].width, height: newConfig.layout[id].height };
+      return newConfig;
+    });
   };
 
-  const handleDragStart = (event: any) => {
-    const { id } = event.active;
-    const { components } = dashboardConfig;
-    const updatedComponents = { ...components };
-    updatedComponents[id].width = event.active.rect.width;
-    updatedComponents[id].height = event.active.rect.height;
-    setDashboardConfig((prevConfig) => ({ ...prevConfig, components: updatedComponents }));
+  const handleResize = (id: string, width: number, height: number) => {
+    setDashboardConfig((prevConfig) => {
+      const newConfig = { ...prevConfig };
+      newConfig.layout[id] = { x: newConfig.layout[id].x, y: newConfig.layout[id].y, width, height };
+      return newConfig;
+    });
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd} onDragStart={handleDragStart} collisionDetection={closestCenter}>
-      <DragOverlay>
-        {({ dragging }) =>
-          dragging ? (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                opacity: 0.5,
-                backgroundColor: 'gray',
-                zIndex: 1000,
-              }}
-            />
-          ) : null
-        }
-      </DragOverlay>
+    <DndContext onDragEnd={handleDragEnd}>
       <DashboardLayout>
-        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                top: `${dashboardConfig.components[id].y * 100}%`,
-                left: `${dashboardConfig.components[id].x * 100}%`,
-                width: `${dashboardConfig.components[id].width * 100}%`,
-                height: `${dashboardConfig.components[id].height * 100}%`,
-                border: '1px solid black',
-                backgroundColor: 'white',
-              }}
-            >
-              {dashboardConfig.components[id].component}
-            </div>
-          ))}
-        </SortableContext>
+        {Object.keys(dashboardConfig.components).map((id) => (
+          <div
+            key={id}
+            style={{
+              position: 'absolute',
+              left: `${dashboardConfig.layout[id].x * 100}%`,
+              top: `${dashboardConfig.layout[id].y * 100}%`,
+              width: `${dashboardConfig.layout[id].width * 100}%`,
+              height: `${dashboardConfig.layout[id].height * 100}%`,
+              border: '1px solid black',
+              backgroundColor: 'white',
+              overflow: 'auto',
+            }}
+          >
+            {dashboardConfig.components[id].component}
+            {dashboardConfig.components[id].resizable && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: 10,
+                  height: 10,
+                  backgroundColor: 'black',
+                  cursor: 'nwse-resize',
+                }}
+                onMouseDown={(event) => {
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  const startX = event.clientX;
+                  const startY = event.clientY;
+                  const startWidth = rect.width;
+                  const startHeight = rect.height;
+                  const handleMouseMove = (event: any) => {
+                    const newWidth = startWidth + (event.clientX - startX);
+                    const newHeight = startHeight + (event.clientY - startY);
+                    handleResize(id, newWidth, newHeight);
+                  };
+                  const handleMouseUp = () => {
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                  };
+                  document.addEventListener('mousemove', handleMouseMove);
+                  document.addEventListener('mouseup', handleMouseUp);
+                }}
+              />
+            )}
+          </div>
+        ))}
       </DashboardLayout>
     </DndContext>
   );

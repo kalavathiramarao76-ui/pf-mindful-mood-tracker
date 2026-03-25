@@ -34,6 +34,7 @@ export default function CommunityPage() {
   const [tags, setTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -78,7 +79,7 @@ export default function CommunityPage() {
       if (searchQuery.trim() !== '') {
         const suggestions = posts.filter((post) => {
           return post.content.toLowerCase().includes(searchQuery.toLowerCase()) || post.author.toLowerCase().includes(searchQuery.toLowerCase());
-        }).map((post) => post.content);
+        });
         setSuggestions(suggestions.slice(0, 5));
       } else {
         setSuggestions([]);
@@ -87,124 +88,74 @@ export default function CommunityPage() {
     fetchSuggestions();
   }, [searchQuery, posts]);
 
-  const handleCreatePost = async () => {
-    if (newPost.trim() !== '') {
-      const post = { content: newPost, author: user.name, category: selectedCategory };
-      const createdPost = await createCommunityPost(post);
-      setPosts([...posts, createdPost]);
-      setFilteredPosts([...posts, createdPost]);
-      setNewPost('');
+  const handleSearch = async (query) => {
+    if (query.trim() !== '') {
+      const results = posts.filter((post) => {
+        return post.content.toLowerCase().includes(query.toLowerCase()) || post.author.toLowerCase().includes(query.toLowerCase());
+      });
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
     }
   };
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
+  const handleAutocompleteChange = (value) => {
+    setSearchQuery(value);
   };
 
   return (
     <div>
-      <Link href="/">
-        <ArrowLeftIcon className="h-6 w-6" />
-      </Link>
-      <h1 className="text-3xl font-bold">Community</h1>
-      <div className="flex flex-col">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search"
-          className="p-2 border border-gray-400 rounded"
-        />
-        {suggestions.length > 0 && (
-          <Autocomplete
-            suggestions={suggestions}
-            onSelect={(suggestion) => handleSearch(suggestion)}
-          />
-        )}
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="p-2 border border-gray-400 rounded"
-        >
-          <option value="">All categories</option>
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-        <div className="flex flex-wrap">
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => {
+      <h1>Community Page</h1>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => handleAutocompleteChange(e.target.value)}
+        placeholder="Search..."
+      />
+      <Autocomplete
+        suggestions={suggestions}
+        handleSearch={handleSearch}
+        handleAutocompleteChange={handleAutocompleteChange}
+      />
+      <select
+        value={selectedCategory}
+        onChange={(e) => setSelectedCategory(e.target.value)}
+      >
+        <option value="">All Categories</option>
+        {categories.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
+      </select>
+      <div>
+        {tags.map((tag) => (
+          <span key={tag}>
+            <input
+              type="checkbox"
+              checked={selectedTags.includes(tag)}
+              onChange={() => {
                 if (selectedTags.includes(tag)) {
                   setSelectedTags(selectedTags.filter((t) => t !== tag));
                 } else {
                   setSelectedTags([...selectedTags, tag]);
                 }
               }}
-              className={`p-2 border border-gray-400 rounded ${selectedTags.includes(tag) ? 'bg-blue-500 text-white' : ''}`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={handleCreatePost}
-          className="p-2 border border-gray-400 rounded bg-blue-500 text-white"
-        >
-          Create post
-        </button>
-        <textarea
-          value={newPost}
-          onChange={(e) => setNewPost(e.target.value)}
-          placeholder="Write a post"
-          className="p-2 border border-gray-400 rounded"
-        />
+            />
+            {tag}
+          </span>
+        ))}
+      </div>
+      <ul>
         {filteredPosts.map((post) => (
-          <div key={post.id}>
+          <li key={post.id}>
             <h2>{post.content}</h2>
             <p>Author: {post.author}</p>
             <p>Category: {post.category}</p>
             <p>Tags: {post.tags.join(', ')}</p>
-            <button
-              onClick={async () => {
-                const reaction = await createPostReaction(post.id);
-                setPostReactions({ ...postReactions, [post.id]: reaction });
-              }}
-              className="p-2 border border-gray-400 rounded bg-blue-500 text-white"
-            >
-              React
-            </button>
-            <button
-              onClick={async () => {
-                const comments = await getPostComments(post.id);
-                setPostComments({ ...postComments, [post.id]: comments });
-              }}
-              className="p-2 border border-gray-400 rounded bg-blue-500 text-white"
-            >
-              View comments
-            </button>
-            <textarea
-              value={newComment[post.id] || ''}
-              onChange={(e) => setNewComment({ ...newComment, [post.id]: e.target.value })}
-              placeholder="Write a comment"
-              className="p-2 border border-gray-400 rounded"
-            />
-            <button
-              onClick={async () => {
-                const comment = await createPostComment(post.id, newComment[post.id]);
-                setPostComments({ ...postComments, [post.id]: [...(postComments[post.id] || []), comment] });
-                setNewComment({ ...newComment, [post.id]: '' });
-              }}
-              className="p-2 border border-gray-400 rounded bg-blue-500 text-white"
-            >
-              Comment
-            </button>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
