@@ -68,57 +68,33 @@ export default function DashboardPage() {
     };
 
     return () => {
-      handleMoodDataChange([]);
-      handleGoalDataChange([]);
-      handleRecommendationDataChange([]);
-      handleCommunityDataChange([]);
-      handleSettingsDataChange({});
+      handleMoodDataChange = null;
+      handleGoalDataChange = null;
+      handleRecommendationDataChange = null;
+      handleCommunityDataChange = null;
+      handleSettingsDataChange = null;
     };
   }, []);
 
-  const handleLayoutChange = (newLayout) => {
-    setLayout(newLayout);
-    localStorage.setItem('layout', JSON.stringify(newLayout));
-  };
-
   return (
     <DashboardLayout>
-      <div className="flex flex-col items-center justify-center h-screen md:flex-row md:justify-around">
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
-          gridArea: `${layout.moodTracker.y + 1} / ${layout.moodTracker.x + 1} / ${layout.moodTracker.y + layout.moodTracker.height + 1} / ${layout.moodTracker.x + layout.moodTracker.width + 1}`,
-        }}>
-          <MoodTracker moodData={moodData} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+        <div className="bg-white rounded shadow-md p-4">
+          <MoodTracker moodData={moodData} onMoodDataChange={(newMoodData) => setMoodData(newMoodData)} />
         </div>
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
-          gridArea: `${layout.recommendations.y + 1} / ${layout.recommendations.x + 1} / ${layout.recommendations.y + layout.recommendations.height + 1} / ${layout.recommendations.x + layout.recommendations.width + 1}`,
-        }}>
-          <Recommendations recommendationData={recommendationData} />
+        <div className="bg-white rounded shadow-md p-4">
+          <Recommendations recommendationData={recommendationData} onRecommendationDataChange={(newRecommendationData) => setRecommendationData(newRecommendationData)} />
         </div>
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
-          gridArea: `${layout.goals.y + 1} / ${layout.goals.x + 1} / ${layout.goals.y + layout.goals.height + 1} / ${layout.goals.x + layout.goals.width + 1}`,
-        }}>
-          <Goals goalData={goalData} />
+        <div className="bg-white rounded shadow-md p-4">
+          <Goals goalData={goalData} onGoalDataChange={(newGoalData) => setGoalData(newGoalData)} />
         </div>
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
-          gridArea: `${layout.community.y + 1} / ${layout.community.x + 1} / ${layout.community.y + layout.community.height + 1} / ${layout.community.x + layout.community.width + 1}`,
-        }}>
-          <Community communityData={communityData} />
+        <div className="bg-white rounded shadow-md p-4 col-span-2">
+          <Community communityData={communityData} onCommunityDataChange={(newCommunityData) => setCommunityData(newCommunityData)} />
         </div>
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
-          gridArea: `${layout.settings.y + 1} / ${layout.settings.x + 1} / ${layout.settings.y + layout.settings.height + 1} / ${layout.settings.x + layout.settings.width + 1}`,
-        }}>
-          <Settings settingsData={settingsData} />
+        <div className="bg-white rounded shadow-md p-4">
+          <Settings settingsData={settingsData} onSettingsDataChange={(newSettingsData) => setSettingsData(newSettingsData)} />
         </div>
       </div>
-      <button onClick={() => handleLayoutChange({
-        moodTracker: { x: 0, y: 0, width: 1, height: 1 },
-        recommendations: { x: 1, y: 0, width: 1, height: 1 },
-        goals: { x: 0, y: 1, width: 1, height: 1 },
-        community: { x: 1, y: 1, width: 1, height: 1 },
-        settings: { x: 0, y: 2, width: 1, height: 1 },
-      })}>
-        Reset Layout
-      </button>
     </DashboardLayout>
   );
 }
