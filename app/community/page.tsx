@@ -1,5 +1,3 @@
-use client;
-
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
@@ -85,14 +83,10 @@ export default function CommunityPage() {
   }, [posts, searchQuery, selectedCategory, selectedTags]);
 
   const handleScroll = () => {
-    if (hasMorePosts && !loading) {
-      const scrollPosition = window.scrollY + window.innerHeight;
-      const documentHeight = document.body.offsetHeight;
-      if (scrollPosition >= documentHeight * 0.8) {
-        setIsFetching(true);
-        setPageNumber((prevPageNumber) => prevPageNumber + 1);
-        setIsFetching(false);
-      }
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight && hasMorePosts && !loading) {
+      setIsFetching(true);
+      setPageNumber((prevPageNumber) => prevPageNumber + 1);
+      setIsFetching(false);
     }
   };
 
@@ -107,10 +101,14 @@ export default function CommunityPage() {
         <div key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.content}</p>
+          <p>Category: {post.category}</p>
+          <p>Tags: {post.tags?.join(', ')}</p>
+          <p>Reactions: {postReactions[post.id]?.length}</p>
+          <p>Comments: {postComments[post.id]?.length}</p>
         </div>
       ))}
       {isFetching && <p>Loading...</p>}
-      {loading && <p>Loading...</p>}
+      {hasMorePosts && !isFetching && <p>Scroll to load more</p>}
     </div>
   );
 }
