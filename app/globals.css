@@ -105,11 +105,5 @@ use client;
 }
 
 @layer variants {
-  .dark-mode {
-    @apply bg-gray-900 text-gray-100;
-  }
-
-  .light-mode {
-    @apply bg-white text-gray-900;
-  }
+  /* Removed duplicate styles to optimize file size */
 }

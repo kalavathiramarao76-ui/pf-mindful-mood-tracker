@@ -31,6 +31,16 @@ export default function DashboardPage() {
     const storedSettingsData = localStorage.getItem('settingsData');
     return storedSettingsData ? JSON.parse(storedSettingsData) : {};
   });
+  const [layout, setLayout] = useState(() => {
+    const storedLayout = localStorage.getItem('layout');
+    return storedLayout ? JSON.parse(storedLayout) : {
+      moodTracker: { x: 0, y: 0, width: 1, height: 1 },
+      recommendations: { x: 1, y: 0, width: 1, height: 1 },
+      goals: { x: 0, y: 1, width: 1, height: 1 },
+      community: { x: 1, y: 1, width: 1, height: 1 },
+      settings: { x: 0, y: 2, width: 1, height: 1 },
+    };
+  });
 
   const router = useRouter();
   const pathname = usePathname();
@@ -66,25 +76,49 @@ export default function DashboardPage() {
     };
   }, []);
 
+  const handleLayoutChange = (newLayout) => {
+    setLayout(newLayout);
+    localStorage.setItem('layout', JSON.stringify(newLayout));
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col items-center justify-center h-screen md:flex-row md:justify-around">
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
+          gridArea: `${layout.moodTracker.y + 1} / ${layout.moodTracker.x + 1} / ${layout.moodTracker.y + layout.moodTracker.height + 1} / ${layout.moodTracker.x + layout.moodTracker.width + 1}`,
+        }}>
           <MoodTracker moodData={moodData} />
         </div>
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
+          gridArea: `${layout.recommendations.y + 1} / ${layout.recommendations.x + 1} / ${layout.recommendations.y + layout.recommendations.height + 1} / ${layout.recommendations.x + layout.recommendations.width + 1}`,
+        }}>
           <Recommendations recommendationData={recommendationData} />
         </div>
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
+          gridArea: `${layout.goals.y + 1} / ${layout.goals.x + 1} / ${layout.goals.y + layout.goals.height + 1} / ${layout.goals.x + layout.goals.width + 1}`,
+        }}>
           <Goals goalData={goalData} />
         </div>
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
+          gridArea: `${layout.community.y + 1} / ${layout.community.x + 1} / ${layout.community.y + layout.community.height + 1} / ${layout.community.x + layout.community.width + 1}`,
+        }}>
           <Community communityData={communityData} />
         </div>
-        <div className="w-full md:w-1/2 xl:w-1/3 p-4">
+        <div className="w-full md:w-1/2 xl:w-1/3 p-4" style={{
+          gridArea: `${layout.settings.y + 1} / ${layout.settings.x + 1} / ${layout.settings.y + layout.settings.height + 1} / ${layout.settings.x + layout.settings.width + 1}`,
+        }}>
           <Settings settingsData={settingsData} />
         </div>
       </div>
+      <button onClick={() => handleLayoutChange({
+        moodTracker: { x: 0, y: 0, width: 1, height: 1 },
+        recommendations: { x: 1, y: 0, width: 1, height: 1 },
+        goals: { x: 0, y: 1, width: 1, height: 1 },
+        community: { x: 1, y: 1, width: 1, height: 1 },
+        settings: { x: 0, y: 2, width: 1, height: 1 },
+      })}>
+        Reset Layout
+      </button>
     </DashboardLayout>
   );
 }
