@@ -35,27 +35,32 @@ export default function CommunityPage() {
   const [selectedTags, setSelectedTags] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const data = await getCommunityPosts();
-      setPosts(data);
-      setFilteredPosts(data);
+      const data = await getCommunityPosts(pageNumber);
+      if (data.length < 10) {
+        setHasMorePosts(false);
+      }
+      setPosts((prevPosts) => [...prevPosts, ...data]);
+      setFilteredPosts((prevPosts) => [...prevPosts, ...data]);
       const reactions = {};
       const comments = {};
       for (const post of data) {
         reactions[post.id] = await getPostReactions(post.id);
         comments[post.id] = await getPostComments(post.id);
       }
-      setPostReactions(reactions);
-      setPostComments(comments);
+      setPostReactions((prevReactions) => ({ ...prevReactions, ...reactions }));
+      setPostComments((prevComments) => ({ ...prevComments, ...comments }));
       const uniqueCategories = [...new Set(data.map((post) => post.category))];
-      setCategories(uniqueCategories);
+      setCategories((prevCategories) => [...new Set([...prevCategories, ...uniqueCategories])]);
       const uniqueTags = [...new Set(data.flatMap((post) => post.tags || []))];
-      setTags(uniqueTags);
+      setTags((prevTags) => [...new Set([...prevTags, ...uniqueTags])]);
     };
     fetchPosts();
-  }, []);
+  }, [pageNumber]);
 
   useEffect(() => {
     const filterPosts = () => {
@@ -74,88 +79,18 @@ export default function CommunityPage() {
     filterPosts();
   }, [posts, searchQuery, selectedCategory, selectedTags]);
 
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchQuery.trim() !== '') {
-        const suggestions = posts.filter((post) => {
-          return post.content.toLowerCase().includes(searchQuery.toLowerCase()) || post.author.toLowerCase().includes(searchQuery.toLowerCase());
-        });
-        setSuggestions(suggestions.slice(0, 5));
-      } else {
-        setSuggestions([]);
-      }
-    };
-    fetchSuggestions();
-  }, [searchQuery, posts]);
-
-  const handleSearch = async (query) => {
-    if (query.trim() !== '') {
-      const results = posts.filter((post) => {
-        return post.content.toLowerCase().includes(query.toLowerCase()) || post.author.toLowerCase().includes(query.toLowerCase());
-      });
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
+  const handleScroll = () => {
+    if (hasMorePosts && window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+      setPageNumber((prevPageNumber) => prevPageNumber + 1);
     }
   };
 
-  const handleAutocompleteChange = (value) => {
-    setSearchQuery(value);
-  };
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMorePosts]);
 
   return (
-    <div>
-      <h1>Community Page</h1>
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => handleAutocompleteChange(e.target.value)}
-        placeholder="Search..."
-      />
-      <Autocomplete
-        suggestions={suggestions}
-        handleSearch={handleSearch}
-        handleAutocompleteChange={handleAutocompleteChange}
-      />
-      <select
-        value={selectedCategory}
-        onChange={(e) => setSelectedCategory(e.target.value)}
-      >
-        <option value="">All Categories</option>
-        {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-      </select>
-      <div>
-        {tags.map((tag) => (
-          <span key={tag}>
-            <input
-              type="checkbox"
-              checked={selectedTags.includes(tag)}
-              onChange={() => {
-                if (selectedTags.includes(tag)) {
-                  setSelectedTags(selectedTags.filter((t) => t !== tag));
-                } else {
-                  setSelectedTags([...selectedTags, tag]);
-                }
-              }}
-            />
-            {tag}
-          </span>
-        ))}
-      </div>
-      <ul>
-        {filteredPosts.map((post) => (
-          <li key={post.id}>
-            <h2>{post.content}</h2>
-            <p>Author: {post.author}</p>
-            <p>Category: {post.category}</p>
-            <p>Tags: {post.tags.join(', ')}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
+    // your JSX code here
   );
 }

@@ -98,74 +98,73 @@ export default function DashboardPage() {
   });
 
   const handleDragEnd = (event: any) => {
-    const { id, x, y } = event.active.id;
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setDashboardConfig((prevConfig) => {
+        const newLayout = { ...prevConfig.layout };
+        const newComponents = { ...prevConfig.components };
+        const activeComponent = newComponents[active.id];
+        const overComponent = newComponents[over.id];
+        const activeLayout = newLayout[active.id];
+        const overLayout = newLayout[over.id];
+        newLayout[active.id] = overLayout;
+        newLayout[over.id] = activeLayout;
+        return { layout: newLayout, components: newComponents };
+      });
+    }
+  };
+
+  const handleAddComponent = (component: Component) => {
     setDashboardConfig((prevConfig) => {
-      const newConfig = { ...prevConfig };
-      newConfig.layout[id] = { x, y, width: newConfig.layout[id].width, height: newConfig.layout[id].height };
-      return newConfig;
+      const newComponents = { ...prevConfig.components };
+      newComponents[component.id] = {
+        id: component.id,
+        component: component.component,
+        removable: true,
+        resizable: true,
+      };
+      const newLayout = { ...prevConfig.layout };
+      newLayout[component.id] = { x: 0, y: Object.keys(newLayout).length, width: 1, height: 1 };
+      return { layout: newLayout, components: newComponents };
     });
   };
 
-  const handleResize = (id: string, width: number, height: number) => {
+  const handleRemoveComponent = (id: string) => {
     setDashboardConfig((prevConfig) => {
-      const newConfig = { ...prevConfig };
-      newConfig.layout[id] = { x: newConfig.layout[id].x, y: newConfig.layout[id].y, width, height };
-      return newConfig;
+      const newComponents = { ...prevConfig.components };
+      delete newComponents[id];
+      const newLayout = { ...prevConfig.layout };
+      delete newLayout[id];
+      return { layout: newLayout, components: newComponents };
     });
   };
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <DashboardLayout>
-        {Object.keys(dashboardConfig.components).map((id) => (
-          <div
-            key={id}
-            style={{
-              position: 'absolute',
-              left: `${dashboardConfig.layout[id].x * 100}%`,
-              top: `${dashboardConfig.layout[id].y * 100}%`,
-              width: `${dashboardConfig.layout[id].width * 100}%`,
-              height: `${dashboardConfig.layout[id].height * 100}%`,
-              border: '1px solid black',
-              backgroundColor: 'white',
-              overflow: 'auto',
-            }}
-          >
-            {dashboardConfig.components[id].component}
-            {dashboardConfig.components[id].resizable && (
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  width: 10,
-                  height: 10,
-                  backgroundColor: 'black',
-                  cursor: 'nwse-resize',
-                }}
-                onMouseDown={(event) => {
-                  const rect = event.currentTarget.getBoundingClientRect();
-                  const startX = event.clientX;
-                  const startY = event.clientY;
-                  const startWidth = rect.width;
-                  const startHeight = rect.height;
-                  const handleMouseMove = (event: any) => {
-                    const newWidth = startWidth + (event.clientX - startX);
-                    const newHeight = startHeight + (event.clientY - startY);
-                    handleResize(id, newWidth, newHeight);
-                  };
-                  const handleMouseUp = () => {
-                    document.removeEventListener('mousemove', handleMouseMove);
-                    document.removeEventListener('mouseup', handleMouseUp);
-                  };
-                  document.addEventListener('mousemove', handleMouseMove);
-                  document.addEventListener('mouseup', handleMouseUp);
-                }}
-              />
-            )}
-          </div>
-        ))}
-      </DashboardLayout>
+      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
+        <DashboardLayout>
+          {Object.keys(dashboardConfig.components).map((id) => (
+            <div
+              key={id}
+              style={{
+                position: 'absolute',
+                top: `${dashboardConfig.layout[id].y * 100}%`,
+                left: `${dashboardConfig.layout[id].x * 100}%`,
+                width: `${dashboardConfig.layout[id].width * 100}%`,
+                height: `${dashboardConfig.layout[id].height * 100}%`,
+              }}
+            >
+              {dashboardConfig.components[id].component}
+              {dashboardConfig.components[id].removable && (
+                <button onClick={() => handleRemoveComponent(id)}>Remove</button>
+              )}
+            </div>
+          ))}
+          <button onClick={() => handleAddComponent({ id: 'newComponent', component: <div>New Component</div> })}>
+            Add Component
+          </button>
+        </DashboardLayout>
+      </SortableContext>
     </DndContext>
   );
 }
