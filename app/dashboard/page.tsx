@@ -1,0 +1,80 @@
+use client;
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import DashboardLayout from '../layout/dashboard-layout';
+import MoodTracker from '../components/mood-tracker';
+import Recommendations from '../components/recommendations';
+import Goals from '../components/goals';
+import Community from '../components/community';
+import Settings from '../components/settings';
+
+export default function DashboardPage() {
+  const [moodData, setMoodData] = useState(() => {
+    const storedMoodData = localStorage.getItem('moodData');
+    return storedMoodData ? JSON.parse(storedMoodData) : [];
+  });
+  const [goalData, setGoalData] = useState(() => {
+    const storedGoalData = localStorage.getItem('goalData');
+    return storedGoalData ? JSON.parse(storedGoalData) : [];
+  });
+  const [recommendationData, setRecommendationData] = useState(() => {
+    const storedRecommendationData = localStorage.getItem('recommendationData');
+    return storedRecommendationData ? JSON.parse(storedRecommendationData) : [];
+  });
+  const [communityData, setCommunityData] = useState(() => {
+    const storedCommunityData = localStorage.getItem('communityData');
+    return storedCommunityData ? JSON.parse(storedCommunityData) : [];
+  });
+  const [settingsData, setSettingsData] = useState(() => {
+    const storedSettingsData = localStorage.getItem('settingsData');
+    return storedSettingsData ? JSON.parse(storedSettingsData) : {};
+  });
+
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const handleMoodDataChange = (newMoodData) => {
+      setMoodData(newMoodData);
+      localStorage.setItem('moodData', JSON.stringify(newMoodData));
+    };
+    const handleGoalDataChange = (newGoalData) => {
+      setGoalData(newGoalData);
+      localStorage.setItem('goalData', JSON.stringify(newGoalData));
+    };
+    const handleRecommendationDataChange = (newRecommendationData) => {
+      setRecommendationData(newRecommendationData);
+      localStorage.setItem('recommendationData', JSON.stringify(newRecommendationData));
+    };
+    const handleCommunityDataChange = (newCommunityData) => {
+      setCommunityData(newCommunityData);
+      localStorage.setItem('communityData', JSON.stringify(newCommunityData));
+    };
+    const handleSettingsDataChange = (newSettingsData) => {
+      setSettingsData(newSettingsData);
+      localStorage.setItem('settingsData', JSON.stringify(newSettingsData));
+    };
+
+    return () => {
+      handleMoodDataChange([]);
+      handleGoalDataChange([]);
+      handleRecommendationDataChange([]);
+      handleCommunityDataChange([]);
+      handleSettingsDataChange({});
+    };
+  }, []);
+
+  return (
+    <DashboardLayout>
+      <div className="flex flex-col items-center justify-center h-screen">
+        <MoodTracker moodData={moodData} />
+        <Recommendations recommendationData={recommendationData} />
+        <Goals goalData={goalData} />
+        <Community communityData={communityData} />
+        <Settings settingsData={settingsData} />
+      </div>
+    </DashboardLayout>
+  );
+}
