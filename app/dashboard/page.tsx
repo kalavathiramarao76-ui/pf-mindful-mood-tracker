@@ -106,65 +106,63 @@ export default function DashboardPage() {
         const activeComponent = newComponents[active.id];
         const overComponent = newComponents[over.id];
         if (activeComponent && overComponent) {
-          newLayout[active.id] = newLayout[over.id];
-          newLayout[over.id] = { x: active.x, y: active.y, width: active.width, height: active.height };
-          newComponents[active.id].component = overComponent.component;
-          newComponents[over.id].component = activeComponent.component;
+          newLayout[active.id] = overComponent.layout;
+          newLayout[over.id] = activeComponent.layout;
+          return { layout: newLayout, components: newComponents };
         }
-        return { layout: newLayout, components: newComponents };
+        return prevConfig;
       });
     }
   };
 
   const handleRemoveComponent = (id: string) => {
     setDashboardConfig((prevConfig) => {
-      const newLayout = { ...prevConfig.layout };
       const newComponents = { ...prevConfig.components };
-      delete newLayout[id];
       delete newComponents[id];
+      const newLayout = { ...prevConfig.layout };
+      delete newLayout[id];
       return { layout: newLayout, components: newComponents };
     });
   };
 
-  const handleAddComponent = (component: JSX.Element) => {
+  const handleAddComponent = (component: Component) => {
     setDashboardConfig((prevConfig) => {
-      const newLayout = { ...prevConfig.layout };
       const newComponents = { ...prevConfig.components };
-      const newId = `component-${Object.keys(newComponents).length}`;
-      newLayout[newId] = { x: 0, y: 0, width: 1, height: 1 };
-      newComponents[newId] = {
-        id: newId,
-        component,
+      newComponents[component.id] = {
+        id: component.id,
+        component: component.component,
         removable: true,
         resizable: true,
       };
+      const newLayout = { ...prevConfig.layout };
+      newLayout[component.id] = { x: 0, y: 0, width: 1, height: 1 };
       return { layout: newLayout, components: newComponents };
     });
   };
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <DashboardLayout>
-        {Object.keys(dashboardConfig.components).map((id) => (
-          <div key={id} style={{
-            position: 'absolute',
-            left: `${dashboardConfig.layout[id].x * 100}%`,
-            top: `${dashboardConfig.layout[id].y * 100}%`,
-            width: `${dashboardConfig.layout[id].width * 100}%`,
-            height: `${dashboardConfig.layout[id].height * 100}%`,
-          }}>
-            {dashboardConfig.components[id].component}
-            {dashboardConfig.components[id].removable && (
-              <button onClick={() => handleRemoveComponent(id)}>Remove</button>
-            )}
-          </div>
-        ))}
-        <button onClick={() => handleAddComponent(<MoodTracker />)}>Add Mood Tracker</button>
-        <button onClick={() => handleAddComponent(<Recommendations />)}>Add Recommendations</button>
-        <button onClick={() => handleAddComponent(<Goals />)}>Add Goals</button>
-        <button onClick={() => handleAddComponent(<Community />)}>Add Community</button>
-        <button onClick={() => handleAddComponent(<Settings />)}>Add Settings</button>
-      </DashboardLayout>
+      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
+        <DashboardLayout>
+          {Object.keys(dashboardConfig.components).map((id) => (
+            <div key={id} style={{
+              position: 'absolute',
+              left: `${dashboardConfig.layout[id].x * 100}%`,
+              top: `${dashboardConfig.layout[id].y * 100}%`,
+              width: `${dashboardConfig.layout[id].width * 100}%`,
+              height: `${dashboardConfig.layout[id].height * 100}%`,
+            }}>
+              {dashboardConfig.components[id].component}
+              {dashboardConfig.components[id].removable && (
+                <button onClick={() => handleRemoveComponent(id)}>Remove</button>
+              )}
+            </div>
+          ))}
+          <button onClick={() => handleAddComponent({ id: 'newComponent', component: <div>New Component</div> })}>
+            Add Component
+          </button>
+        </DashboardLayout>
+      </SortableContext>
     </DndContext>
   );
 }

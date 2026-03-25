@@ -73,10 +73,10 @@ export default function CommunityPage() {
         setFilteredPosts(posts);
       } else {
         const filtered = posts.filter((post) => {
-          const queryMatch = post.content.toLowerCase().includes(searchQuery.toLowerCase());
-          const categoryMatch = post.category === selectedCategory || selectedCategory === '';
-          const tagsMatch = selectedTags.length === 0 || selectedTags.some((tag) => post.tags?.includes(tag));
-          return queryMatch && categoryMatch && tagsMatch;
+          const hasCategory = selectedCategory === '' || post.category === selectedCategory;
+          const hasTags = selectedTags.length === 0 || selectedTags.some((tag) => post.tags?.includes(tag));
+          const hasSearchQuery = searchQuery.trim() === '' || post.content.toLowerCase().includes(searchQuery.toLowerCase());
+          return hasCategory && hasTags && hasSearchQuery;
         });
         setFilteredPosts(filtered);
       }
@@ -85,35 +85,32 @@ export default function CommunityPage() {
   }, [posts, searchQuery, selectedCategory, selectedTags]);
 
   const handleScroll = () => {
-    const scrollPosition = window.scrollY + window.innerHeight;
-    const documentHeight = document.body.offsetHeight;
-    if (scrollPosition >= documentHeight * 0.8 && hasMorePosts && !isFetching) {
-      setIsFetching(true);
-      setPageNumber((prevPageNumber) => prevPageNumber + 1);
-      setIsFetching(false);
+    if (hasMorePosts && !loading) {
+      const scrollPosition = window.scrollY + window.innerHeight;
+      const documentHeight = document.body.offsetHeight;
+      if (scrollPosition >= documentHeight * 0.8) {
+        setIsFetching(true);
+        setPageNumber((prevPageNumber) => prevPageNumber + 1);
+        setIsFetching(false);
+      }
     }
   };
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMorePosts, isFetching]);
+  }, [hasMorePosts, loading]);
 
   return (
     <div>
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-        <div>
-          {filteredPosts.map((post) => (
-            <div key={post.id}>
-              <h2>{post.title}</h2>
-              <p>{post.content}</p>
-            </div>
-          ))}
-          {isFetching && <div>Loading more posts...</div>}
+      {filteredPosts.map((post) => (
+        <div key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
         </div>
-      )}
+      ))}
+      {isFetching && <p>Loading...</p>}
+      {loading && <p>Loading...</p>}
     </div>
   );
 }
