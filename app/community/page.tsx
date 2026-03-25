@@ -38,6 +38,7 @@ export default function CommunityPage() {
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -72,10 +73,10 @@ export default function CommunityPage() {
         setFilteredPosts(posts);
       } else {
         const filtered = posts.filter((post) => {
-          const searchCondition = post.content.toLowerCase().includes(searchQuery.toLowerCase()) || post.author.toLowerCase().includes(searchQuery.toLowerCase());
-          const categoryCondition = selectedCategory === '' || post.category === selectedCategory;
-          const tagsCondition = selectedTags.length === 0 || selectedTags.some((tag) => post.tags?.includes(tag));
-          return searchCondition && categoryCondition && tagsCondition;
+          const queryMatch = post.content.toLowerCase().includes(searchQuery.toLowerCase());
+          const categoryMatch = post.category === selectedCategory || selectedCategory === '';
+          const tagsMatch = selectedTags.length === 0 || selectedTags.some((tag) => post.tags?.includes(tag));
+          return queryMatch && categoryMatch && tagsMatch;
         });
         setFilteredPosts(filtered);
       }
@@ -85,20 +86,34 @@ export default function CommunityPage() {
 
   const handleScroll = () => {
     const scrollPosition = window.scrollY + window.innerHeight;
-    const height = document.body.offsetHeight;
-    if (scrollPosition >= height * 0.9 && hasMorePosts && !loading) {
+    const documentHeight = document.body.offsetHeight;
+    if (scrollPosition >= documentHeight * 0.8 && hasMorePosts && !isFetching) {
+      setIsFetching(true);
       setPageNumber((prevPageNumber) => prevPageNumber + 1);
+      setIsFetching(false);
     }
   };
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [hasMorePosts, loading]);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMorePosts, isFetching]);
 
   return (
-    // your JSX code here
+    <div>
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <div>
+          {filteredPosts.map((post) => (
+            <div key={post.id}>
+              <h2>{post.title}</h2>
+              <p>{post.content}</p>
+            </div>
+          ))}
+          {isFetching && <div>Loading more posts...</div>}
+        </div>
+      )}
+    </div>
   );
 }

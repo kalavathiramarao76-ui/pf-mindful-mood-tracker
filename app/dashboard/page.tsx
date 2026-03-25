@@ -145,17 +145,14 @@ export default function DashboardPage() {
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <DashboardLayout>
-        {Object.keys(dashboardConfig.layout).map((id) => (
-          <div
-            key={id}
-            style={{
-              position: 'absolute',
-              left: `${dashboardConfig.layout[id].x * 100}%`,
-              top: `${dashboardConfig.layout[id].y * 100}%`,
-              width: `${dashboardConfig.layout[id].width * 100}%`,
-              height: `${dashboardConfig.layout[id].height * 100}%`,
-            }}
-          >
+        {Object.keys(dashboardConfig.components).map((id) => (
+          <div key={id} style={{
+            position: 'absolute',
+            left: `${dashboardConfig.layout[id].x * 100}%`,
+            top: `${dashboardConfig.layout[id].y * 100}%`,
+            width: `${dashboardConfig.layout[id].width * 100}%`,
+            height: `${dashboardConfig.layout[id].height * 100}%`,
+          }}>
             {dashboardConfig.components[id].component}
             {dashboardConfig.components[id].removable && (
               <button onClick={() => handleRemoveComponent(id)}>Remove</button>
