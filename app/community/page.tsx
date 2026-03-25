@@ -28,6 +28,8 @@ export default function CommunityPage() {
   const [postComments, setPostComments] = useState({});
   const [newComment, setNewComment] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -42,25 +44,31 @@ export default function CommunityPage() {
       }
       setPostReactions(reactions);
       setPostComments(comments);
+      const uniqueCategories = [...new Set(data.map((post) => post.category))];
+      setCategories(uniqueCategories);
     };
     fetchPosts();
   }, []);
 
   useEffect(() => {
     const filterPosts = () => {
-      if (searchQuery.trim() === '') {
+      if (searchQuery.trim() === '' && selectedCategory === '') {
         setFilteredPosts(posts);
       } else {
-        const filtered = posts.filter((post) => post.content.toLowerCase().includes(searchQuery.toLowerCase()) || post.author.toLowerCase().includes(searchQuery.toLowerCase()));
+        const filtered = posts.filter((post) => {
+          const searchCondition = post.content.toLowerCase().includes(searchQuery.toLowerCase()) || post.author.toLowerCase().includes(searchQuery.toLowerCase());
+          const categoryCondition = selectedCategory === '' || post.category === selectedCategory;
+          return searchCondition && categoryCondition;
+        });
         setFilteredPosts(filtered);
       }
     };
     filterPosts();
-  }, [posts, searchQuery]);
+  }, [posts, searchQuery, selectedCategory]);
 
   const handleCreatePost = async () => {
     if (newPost.trim() !== '') {
-      const post = { content: newPost, author: user.name };
+      const post = { content: newPost, author: user.name, category: selectedCategory };
       const data = await createCommunityPost(post);
       setPosts([data, ...posts]);
       setPostReactions({ ...postReactions, [data.id]: [] });
@@ -76,7 +84,7 @@ export default function CommunityPage() {
 
   const handleUpdatePost = async () => {
     if (editingPost && editedPostContent.trim() !== '') {
-      const updatedPost = { id: editingPost.id, content: editedPostContent, author: editingPost.author };
+      const updatedPost = { id: editingPost.id, content: editedPostContent, author: editingPost.author, category: editingPost.category };
       const data = await updateCommunityPost(updatedPost);
       setPosts(posts.map((post) => (post.id === data.id ? data : post)));
       setEditingPost(null);
@@ -87,51 +95,59 @@ export default function CommunityPage() {
   const handleDeletePost = async (postId) => {
     await deleteCommunityPost(postId);
     setPosts(posts.filter((post) => post.id !== postId));
-    const updatedReactions = { ...postReactions };
-    delete updatedReactions[postId];
-    setPostReactions(updatedReactions);
-    const updatedComments = { ...postComments };
-    delete updatedComments[postId];
-    setPostComments(updatedComments);
   };
 
-  const handleReactToPost = async (postId, reaction) => {
-    const existingReaction = postReactions[postId].find((r) => r.user === user.name && r.reaction === reaction);
-    if (existingReaction) {
-      const updatedReactions = postReactions[postId].filter((r) => r.id !== existingReaction.id);
-      setPostReactions({ ...postReactions, [postId]: updatedReactions });
-    } else {
-      const newReaction = { user: user.name, reaction };
-      const data = await createPostReaction(newReaction, postId);
-      setPostReactions({ ...postReactions, [postId]: [...postReactions[postId], data] });
-    }
-  };
-
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
+  const handleCategoryChange = (event) => {
+    setSelectedCategory(event.target.value);
   };
 
   return (
     <div>
-      <input type="search" value={searchQuery} onChange={handleSearch} placeholder="Search posts" />
-      {filteredPosts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.author}</h2>
-          <p>{post.content}</p>
-          <button onClick={() => handleReactToPost(post.id, 'like')}>Like</button>
-          <button onClick={() => handleReactToPost(post.id, 'dislike')}>Dislike</button>
-          <button onClick={() => handleEditPost(post)}>Edit</button>
-          <button onClick={() => handleDeletePost(post.id)}>Delete</button>
-          {editingPost && editingPost.id === post.id ? (
-            <div>
-              <input type="text" value={editedPostContent} onChange={(e) => setEditedPostContent(e.target.value)} />
-              <button onClick={handleUpdatePost}>Update</button>
-            </div>
-          ) : null}
-        </div>
-      ))}
-      <input type="text" value={newPost} onChange={(e) => setNewPost(e.target.value)} />
+      <h1>Community Page</h1>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
+        placeholder="Search posts"
+      />
+      <select value={selectedCategory} onChange={handleCategoryChange}>
+        <option value="">All categories</option>
+        {categories.map((category) => (
+          <option key={category} value={category}>{category}</option>
+        ))}
+      </select>
       <button onClick={handleCreatePost}>Create Post</button>
+      <ul>
+        {filteredPosts.map((post) => (
+          <li key={post.id}>
+            <h2>{post.content}</h2>
+            <p>Author: {post.author}</p>
+            <p>Category: {post.category}</p>
+            <button onClick={() => handleEditPost(post)}>Edit</button>
+            <button onClick={() => handleDeletePost(post.id)}>Delete</button>
+            <ul>
+              {postReactions[post.id] && postReactions[post.id].map((reaction) => (
+                <li key={reaction.id}>{reaction.type}</li>
+              ))}
+            </ul>
+            <ul>
+              {postComments[post.id] && postComments[post.id].map((comment) => (
+                <li key={comment.id}>{comment.content}</li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+      {editingPost && (
+        <div>
+          <input
+            type="text"
+            value={editedPostContent}
+            onChange={(event) => setEditedPostContent(event.target.value)}
+          />
+          <button onClick={handleUpdatePost}>Update Post</button>
+        </div>
+      )}
     </div>
   );
 }

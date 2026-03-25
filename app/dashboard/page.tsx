@@ -1,5 +1,3 @@
-use client;
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
@@ -9,6 +7,17 @@ import Recommendations from '../components/recommendations';
 import Goals from '../components/goals';
 import Community from '../components/community';
 import Settings from '../components/settings';
+import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+
+interface Component {
+  id: string;
+  component: JSX.Element;
+}
+
+interface Layout {
+  [key: string]: { x: number; y: number; width: number; height: number };
+}
 
 export default function DashboardPage() {
   const [moodData, setMoodData] = useState(() => {
@@ -68,33 +77,64 @@ export default function DashboardPage() {
     };
 
     return () => {
-      handleMoodDataChange = null;
-      handleGoalDataChange = null;
-      handleRecommendationDataChange = null;
-      handleCommunityDataChange = null;
-      handleSettingsDataChange = null;
+      handleMoodDataChange = () => { };
+      handleGoalDataChange = () => { };
+      handleRecommendationDataChange = () => { };
+      handleCommunityDataChange = () => { };
+      handleSettingsDataChange = () => { };
     };
   }, []);
 
+  const components: Component[] = [
+    { id: 'moodTracker', component: <MoodTracker /> },
+    { id: 'recommendations', component: <Recommendations /> },
+    { id: 'goals', component: <Goals /> },
+    { id: 'community', component: <Community /> },
+    { id: 'settings', component: <Settings /> },
+  ];
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      const newLayout: Layout = { ...layout };
+      const activeComponent = components.find((component) => component.id === active.id);
+      const overComponent = components.find((component) => component.id === over.id);
+
+      if (activeComponent && overComponent) {
+        const activeRect = activeComponent.component.getBoundingClientRect();
+        const overRect = overComponent.component.getBoundingClientRect();
+
+        newLayout[active.id] = {
+          x: overRect.left - activeRect.left,
+          y: overRect.top - activeRect.top,
+          width: activeRect.width,
+          height: activeRect.height,
+        };
+
+        setLayout(newLayout);
+        localStorage.setItem('layout', JSON.stringify(newLayout));
+      }
+    }
+  };
+
   return (
-    <DashboardLayout>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-        <div className="bg-white rounded shadow-md p-4">
-          <MoodTracker moodData={moodData} onMoodDataChange={(newMoodData) => setMoodData(newMoodData)} />
-        </div>
-        <div className="bg-white rounded shadow-md p-4">
-          <Recommendations recommendationData={recommendationData} onRecommendationDataChange={(newRecommendationData) => setRecommendationData(newRecommendationData)} />
-        </div>
-        <div className="bg-white rounded shadow-md p-4">
-          <Goals goalData={goalData} onGoalDataChange={(newGoalData) => setGoalData(newGoalData)} />
-        </div>
-        <div className="bg-white rounded shadow-md p-4 col-span-2">
-          <Community communityData={communityData} onCommunityDataChange={(newCommunityData) => setCommunityData(newCommunityData)} />
-        </div>
-        <div className="bg-white rounded shadow-md p-4">
-          <Settings settingsData={settingsData} onSettingsDataChange={(newSettingsData) => setSettingsData(newSettingsData)} />
-        </div>
-      </div>
-    </DashboardLayout>
+    <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+      <SortableContext items={components} strategy={rectSortingStrategy}>
+        <DashboardLayout>
+          {components.map((component) => (
+            <div key={component.id} style={{
+              position: 'absolute',
+              left: `${layout[component.id].x}px`,
+              top: `${layout[component.id].y}px`,
+              width: `${layout[component.id].width}px`,
+              height: `${layout[component.id].height}px`,
+            }}>
+              {component.component}
+            </div>
+          ))}
+        </DashboardLayout>
+      </SortableContext>
+    </DndContext>
   );
 }
