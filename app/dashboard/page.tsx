@@ -96,67 +96,90 @@ export default function DashboardPage() {
     const storedGoalData = localStorage.getItem('goalData');
     return storedGoalData ? JSON.parse(storedGoalData) : [];
   });
-  const [showTutorial, setShowTutorial] = useState(() => {
-    const storedTutorialStatus = localStorage.getItem('showTutorial');
-    return storedTutorialStatus === null || storedTutorialStatus === 'true';
+
+  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
+    layout: {
+      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+      recommendations: { x: 300, y: 0, width: 300, height: 200 },
+      goals: { x: 0, y: 200, width: 300, height: 200 },
+      community: { x: 300, y: 200, width: 300, height: 200 },
+      settings: { x: 0, y: 400, width: 300, height: 200 },
+    },
+    components: {
+      moodTracker: {
+        id: 'moodTracker',
+        component: <MoodTracker />,
+        removable: false,
+        resizable: true,
+      },
+      recommendations: {
+        id: 'recommendations',
+        component: <Recommendations />,
+        removable: false,
+        resizable: true,
+      },
+      goals: {
+        id: 'goals',
+        component: <Goals />,
+        removable: false,
+        resizable: true,
+      },
+      community: {
+        id: 'community',
+        component: <Community />,
+        removable: false,
+        resizable: true,
+      },
+      settings: {
+        id: 'settings',
+        component: <Settings />,
+        removable: false,
+        resizable: true,
+      },
+    },
+    breakpoints: {
+      small: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 100, height: 100 },
+          recommendations: { x: 100, y: 0, width: 100, height: 100 },
+          goals: { x: 0, y: 100, width: 100, height: 100 },
+          community: { x: 100, y: 100, width: 100, height: 100 },
+          settings: { x: 0, y: 200, width: 100, height: 100 },
+        },
+      },
+    },
   });
-  const [currentTutorialStep, setCurrentTutorialStep] = useState(0);
 
-  const handleTutorialNext = () => {
-    if (currentTutorialStep < tutorialSteps.length - 1) {
-      setCurrentTutorialStep(currentTutorialStep + 1);
-    } else {
-      setShowTutorial(false);
-      localStorage.setItem('showTutorial', 'false');
-    }
-  };
-
-  const handleTutorialSkip = () => {
-    setShowTutorial(false);
-    localStorage.setItem('showTutorial', 'false');
+  const handleDragEnd = (event: any) => {
+    const { id, x, y } = event;
+    setDashboardConfig((prevConfig) => ({
+      ...prevConfig,
+      layout: {
+        ...prevConfig.layout,
+        [id]: { x, y, width: prevConfig.layout[id].width, height: prevConfig.layout[id].height },
+      },
+    }));
   };
 
   return (
     <DashboardLayout>
-      {showTutorial && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              padding: '20px',
-              borderRadius: '10px',
-              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
-            }}
-          >
-            <h2>{tutorialSteps[currentTutorialStep].title}</h2>
-            <p>{tutorialSteps[currentTutorialStep].description}</p>
-            <button onClick={handleTutorialNext}>Next</button>
-            <button onClick={handleTutorialSkip}>Skip</button>
-          </div>
-        </div>
-      )}
-      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
-        <SortableContext items={items} strategy={rectSortingStrategy}>
-          <Suspense fallback={<div>Loading...</div>}>
-            <MemoizedMoodTracker />
-            <MemoizedRecommendations />
-            <MemoizedGoals />
-            <MemoizedCommunity />
-            <MemoizedSettings />
-          </Suspense>
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
+          {Object.keys(dashboardConfig.components).map((id) => (
+            <div
+              key={id}
+              style={{
+                position: 'absolute',
+                left: dashboardConfig.layout[id].x,
+                top: dashboardConfig.layout[id].y,
+                width: dashboardConfig.layout[id].width,
+                height: dashboardConfig.layout[id].height,
+                border: '1px solid black',
+              }}
+            >
+              {dashboardConfig.components[id].component}
+            </div>
+          ))}
         </SortableContext>
       </DndContext>
     </DashboardLayout>
