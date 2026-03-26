@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import DashboardLayout from '../layout/dashboard-layout';
 import MoodTracker from '../components/mood-tracker';
 import Recommendations from '../components/recommendations';
@@ -35,6 +34,45 @@ interface DashboardConfig {
     };
   };
 }
+
+interface TutorialStep {
+  title: string;
+  description: string;
+  target: string;
+}
+
+const tutorialSteps: TutorialStep[] = [
+  {
+    title: 'Welcome to MoodWave',
+    description: 'This is your personalized mental wellness dashboard.',
+    target: 'dashboard',
+  },
+  {
+    title: 'Mood Tracker',
+    description: 'Track your mood and emotions over time.',
+    target: 'moodTracker',
+  },
+  {
+    title: 'Recommendations',
+    description: 'Get personalized recommendations for improving your mental well-being.',
+    target: 'recommendations',
+  },
+  {
+    title: 'Goals',
+    description: 'Set and track your goals for achieving better mental health.',
+    target: 'goals',
+  },
+  {
+    title: 'Community',
+    description: 'Connect with others who share similar interests and goals.',
+    target: 'community',
+  },
+  {
+    title: 'Settings',
+    description: 'Customize your dashboard to fit your needs.',
+    target: 'settings',
+  },
+];
 
 export default function DashboardPage() {
   const [moodData, setMoodData] = useState(() => {
@@ -100,7 +138,16 @@ export default function DashboardPage() {
         },
       },
       breakpoints: {
-        sm: {
+        desktop: {
+          layout: {
+            moodTracker: { x: 0, y: 0, width: 1, height: 1 },
+            recommendations: { x: 1, y: 0, width: 1, height: 1 },
+            goals: { x: 0, y: 1, width: 1, height: 1 },
+            community: { x: 1, y: 1, width: 1, height: 1 },
+            settings: { x: 0, y: 2, width: 1, height: 1 },
+          },
+        },
+        mobile: {
           layout: {
             moodTracker: { x: 0, y: 0, width: 1, height: 1 },
             recommendations: { x: 0, y: 1, width: 1, height: 1 },
@@ -112,66 +159,77 @@ export default function DashboardPage() {
       },
     };
   });
+  const [tutorialIndex, setTutorialIndex] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(true);
 
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      setDashboardConfig((prevConfig) => {
-        const newLayout = { ...prevConfig.layout };
-        const newComponents = { ...prevConfig.components };
-        const activeComponent = newComponents[active.id];
-        const overComponent = newComponents[over.id];
-        const activeLayout = newLayout[active.id];
-        const overLayout = newLayout[over.id];
-        newLayout[active.id] = overLayout;
-        newLayout[over.id] = activeLayout;
-        return { ...prevConfig, layout: newLayout };
-      });
+  const handleNextTutorialStep = () => {
+    if (tutorialIndex < tutorialSteps.length - 1) {
+      setTutorialIndex(tutorialIndex + 1);
+    } else {
+      setShowTutorial(false);
     }
   };
 
-  const handleAddComponent = (component: Component) => {
-    setDashboardConfig((prevConfig) => {
-      const newComponents = { ...prevConfig.components };
-      newComponents[component.id] = {
-        id: component.id,
-        component: component.component,
-        removable: true,
-        resizable: true,
-      };
-      const newLayout = { ...prevConfig.layout };
-      newLayout[component.id] = { x: 0, y: Object.keys(newLayout).length, width: 1, height: 1 };
-      return { ...prevConfig, components: newComponents, layout: newLayout };
-    });
-  };
-
-  const handleRemoveComponent = (componentId: string) => {
-    setDashboardConfig((prevConfig) => {
-      const newComponents = { ...prevConfig.components };
-      delete newComponents[componentId];
-      const newLayout = { ...prevConfig.layout };
-      delete newLayout[componentId];
-      return { ...prevConfig, components: newComponents, layout: newLayout };
-    });
+  const handleSkipTutorial = () => {
+    setShowTutorial(false);
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <DashboardLayout>
-        {Object.keys(dashboardConfig.components).map((componentId) => (
-          <SortableContext key={componentId} items={[componentId]} strategy={rectSortingStrategy}>
-            {dashboardConfig.components[componentId].component}
-          </SortableContext>
-        ))}
-        <button onClick={() => handleAddComponent({ id: 'newComponent', component: <div>New Component</div> })}>
-          Add Component
-        </button>
-        {Object.keys(dashboardConfig.components).map((componentId) => (
-          <button key={componentId} onClick={() => handleRemoveComponent(componentId)}>
-            Remove {componentId}
-          </button>
-        ))}
-      </DashboardLayout>
-    </DndContext>
+    <DashboardLayout>
+      {showTutorial && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              padding: '20px',
+              borderRadius: '10px',
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h2>{tutorialSteps[tutorialIndex].title}</h2>
+            <p>{tutorialSteps[tutorialIndex].description}</p>
+            <button onClick={handleNextTutorialStep}>Next</button>
+            <button onClick={handleSkipTutorial}>Skip</button>
+          </div>
+        </div>
+      )}
+      <DndContext collisionDetection={closestCenter}>
+        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridGap: '10px',
+            }}
+          >
+            {Object.keys(dashboardConfig.components).map((componentId) => (
+              <div
+                key={componentId}
+                style={{
+                  gridColumn: dashboardConfig.layout[componentId].x,
+                  gridRow: dashboardConfig.layout[componentId].y,
+                  width: `${dashboardConfig.layout[componentId].width * 100}%`,
+                  height: `${dashboardConfig.layout[componentId].height * 100}%`,
+                }}
+              >
+                {dashboardConfig.components[componentId].component}
+              </div>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </DashboardLayout>
   );
 }
