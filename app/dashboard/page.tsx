@@ -81,11 +81,31 @@ const tutorialSteps: TutorialStep[] = [
   },
 ];
 
-const MemoizedMoodTracker = React.memo(LazyMoodTracker);
-const MemoizedRecommendations = React.memo(LazyRecommendations);
-const MemoizedGoals = React.memo(LazyGoals);
-const MemoizedCommunity = React.memo(LazyCommunity);
-const MemoizedSettings = React.memo(LazySettings);
+const MemoizedMoodTracker = React.memo(() => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyMoodTracker />
+  </Suspense>
+));
+const MemoizedRecommendations = React.memo(() => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyRecommendations />
+  </Suspense>
+));
+const MemoizedGoals = React.memo(() => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyGoals />
+  </Suspense>
+));
+const MemoizedCommunity = React.memo(() => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyCommunity />
+  </Suspense>
+));
+const MemoizedSettings = React.memo(() => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazySettings />
+  </Suspense>
+));
 
 export default function DashboardPage() {
   const [moodData, setMoodData] = useState(() => {
@@ -97,89 +117,15 @@ export default function DashboardPage() {
     return storedGoalData ? JSON.parse(storedGoalData) : [];
   });
 
-  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
-    layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-      recommendations: { x: 300, y: 0, width: 300, height: 200 },
-      goals: { x: 0, y: 200, width: 300, height: 200 },
-      community: { x: 300, y: 200, width: 300, height: 200 },
-      settings: { x: 0, y: 400, width: 300, height: 200 },
-    },
-    components: {
-      moodTracker: {
-        id: 'moodTracker',
-        component: <MoodTracker />,
-        removable: false,
-        resizable: true,
-      },
-      recommendations: {
-        id: 'recommendations',
-        component: <Recommendations />,
-        removable: false,
-        resizable: true,
-      },
-      goals: {
-        id: 'goals',
-        component: <Goals />,
-        removable: false,
-        resizable: true,
-      },
-      community: {
-        id: 'community',
-        component: <Community />,
-        removable: false,
-        resizable: true,
-      },
-      settings: {
-        id: 'settings',
-        component: <Settings />,
-        removable: false,
-        resizable: true,
-      },
-    },
-    breakpoints: {
-      small: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 100, height: 100 },
-          recommendations: { x: 100, y: 0, width: 100, height: 100 },
-          goals: { x: 0, y: 100, width: 100, height: 100 },
-          community: { x: 100, y: 100, width: 100, height: 100 },
-          settings: { x: 0, y: 200, width: 100, height: 100 },
-        },
-      },
-    },
-  });
-
-  const handleDragEnd = (event: any) => {
-    const { id, x, y } = event;
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      layout: {
-        ...prevConfig.layout,
-        [id]: { x, y, width: prevConfig.layout[id].width, height: prevConfig.layout[id].height },
-      },
-    }));
-  };
-
   return (
     <DashboardLayout>
-      <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                left: dashboardConfig.layout[id].x,
-                top: dashboardConfig.layout[id].y,
-                width: dashboardConfig.layout[id].width,
-                height: dashboardConfig.layout[id].height,
-                border: '1px solid black',
-              }}
-            >
-              {dashboardConfig.components[id].component}
-            </div>
-          ))}
+      <DndContext collisionDetection={closestCenter}>
+        <SortableContext items={[]} strategy={rectSortingStrategy}>
+          <MemoizedMoodTracker />
+          <MemoizedRecommendations />
+          <MemoizedGoals />
+          <MemoizedCommunity />
+          <MemoizedSettings />
         </SortableContext>
       </DndContext>
     </DashboardLayout>

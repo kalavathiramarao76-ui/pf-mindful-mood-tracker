@@ -119,16 +119,5 @@
 <meta name="og:image" content="https://moodwave.com/logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MoodWave: Personalized Mental Wellness">
-<meta name="twitter:description" content="MoodWave: Personalized Mental Wellness" 
-
-However, since the code provided does not contain any unused styles, the minification process will only remove unnecessary whitespace and comments, resulting in a smaller file size. Here is the minified version of the code:
-
-@tailwind base;@tailwind components;@tailwind utilities;
-@layer base{html{@apply scroll-smooth;}body{@apply bg-gray-900 text-gray-100;font-family:'Inter',sans-serif;line-height:1.6;}a{@apply text-blue-500 hover:text-blue-700;}h1,h2,h3,h4,h5,h6{@apply font-bold;}h1{@apply text-4xl;}h2{@apply text-3xl;}h3{@apply text-2xl;}h4{@apply text-xl;}h5{@apply text-lg;}h6{@apply text-base;}button{@apply rounded-lg;}}
-@layer components{.container{@apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;}.btn{@apply py-2 px-4 rounded-lg;}.btn-primary{@apply bg-blue-500 hover:bg-blue-700 text-white;}.btn-secondary{@apply bg-gray-300 hover:bg-gray-400 text-gray-900;}}
-@layer utilities{.dark-mode{@apply bg-gray-900 text-gray-100;}.light-mode{@apply bg-white text-gray-900;}}
-@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/Inter-Regular.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/Inter-SemiBold.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/Inter-Bold.woff2') format('woff2');}
-<link rel="preload" href="/fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous" load="fetch"><link rel="preload" href="/fonts/Inter-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous" load="fetch"><link rel="preload" href="/fonts/Inter-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous" load="fetch">
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta name="title" content="MoodWave: Personalized Mental Wellness"><meta name="description" content="MoodWave: Personalized Mental Wellness, a platform for tracking and improving mental health through personalized recommendations and mood tracking."><meta name="keywords" content="mental wellness, mood tracking, personalized wellness, mental health, self-care, mindfulness"><meta name="author" content="MoodWave Team"><meta name="robots" content="index, follow"><meta name="og:title" content="MoodWave: Personalized Mental Wellness"><meta name="og:description" content="MoodWave: Personalized Mental Wellness, a platform for tracking and improving mental health through personalized recommendations and mood tracking."><meta name="og:url" content="https://moodwave.com"><meta name="og:image" content="https://moodwave.com/logo.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="MoodWave: Personalized Mental Wellness"><meta name="twitter:description" content="MoodWave: Personalized Mental Wellness"
+<meta name="twitter:description" content="MoodWave: Personalized Mental Wellness, a platform for tracking and improving mental health through personalized recommendations and mood tracking.">
+<meta name="twitter:image" content="https://moodwave.com/logo.png">
