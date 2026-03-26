@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import DashboardLayout from '../layout/dashboard-layout';
 import MoodTracker from '../components/mood-tracker';
@@ -96,35 +96,38 @@ export default function DashboardPage() {
     const storedGoalData = localStorage.getItem('goalData');
     return storedGoalData ? JSON.parse(storedGoalData) : [];
   });
-  const [recommendationData, setRecommendationData] = useState(() => {
-    const storedRecommendationData = localStorage.getItem('recommendationData');
-    return storedRecommendationData ? JSON.parse(storedRecommendationData) : [];
-  });
-  const [communityData, setCommunityData] = useState(() => {
-    const storedCommunityData = localStorage.getItem('communityData');
-    return storedCommunityData ? JSON.parse(storedCommunityData) : [];
-  });
-  const [settingsData, setSettingsData] = useState(() => {
-    const storedSettingsData = localStorage.getItem('settingsData');
-    return storedSettingsData ? JSON.parse(storedSettingsData) : {};
-  });
+
+  const memoizedComponents = useMemo(() => {
+    return {
+      moodTracker: <MemoizedMoodTracker />,
+      recommendations: <MemoizedRecommendations />,
+      goals: <MemoizedGoals />,
+      community: <MemoizedCommunity />,
+      settings: <MemoizedSettings />,
+    };
+  }, []);
+
+  const handleMoodDataChange = useCallback((newMoodData) => {
+    setMoodData(newMoodData);
+    localStorage.setItem('moodData', JSON.stringify(newMoodData));
+  }, []);
+
+  const handleGoalDataChange = useCallback((newGoalData) => {
+    setGoalData(newGoalData);
+    localStorage.setItem('goalData', JSON.stringify(newGoalData));
+  }, []);
 
   return (
     <DashboardLayout>
-      <Suspense fallback={<div>Loading...</div>}>
-        <MemoizedMoodTracker />
-        <MemoizedRecommendations />
-        <MemoizedGoals />
-        <MemoizedCommunity />
-        <MemoizedSettings />
-      </Suspense>
-      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+      <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={items} strategy={rectSortingStrategy}>
-          {items.map((item) => (
-            <div key={item.id}>{item.component}</div>
-          ))}
+          {memoizedComponents.moodTracker}
+          {memoizedComponents.recommendations}
+          {memoizedComponents.goals}
+          {memoizedComponents.community}
+          {memoizedComponents.settings}
         </SortableContext>
-        <DragOverlay>{activeId ? <div>{activeId}</div> : null}</DragOverlay>
+        <DragOverlay>{/* overlay content */}</DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
