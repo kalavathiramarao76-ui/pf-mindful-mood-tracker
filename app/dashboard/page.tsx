@@ -29,6 +29,11 @@ interface DashboardConfig {
       resizable: boolean;
     };
   };
+  breakpoints: {
+    [key: string]: {
+      layout: Layout;
+    };
+  };
 }
 
 export default function DashboardPage() {
@@ -94,65 +99,95 @@ export default function DashboardPage() {
           resizable: true,
         },
       },
+      breakpoints: {
+        sm: {
+          layout: {
+            moodTracker: { x: 0, y: 0, width: 1, height: 1 },
+            recommendations: { x: 0, y: 1, width: 1, height: 1 },
+            goals: { x: 0, y: 2, width: 1, height: 1 },
+            community: { x: 0, y: 3, width: 1, height: 1 },
+            settings: { x: 0, y: 4, width: 1, height: 1 },
+          },
+        },
+        md: {
+          layout: {
+            moodTracker: { x: 0, y: 0, width: 1, height: 1 },
+            recommendations: { x: 1, y: 0, width: 1, height: 1 },
+            goals: { x: 0, y: 1, width: 1, height: 1 },
+            community: { x: 1, y: 1, width: 1, height: 1 },
+            settings: { x: 0, y: 2, width: 1, height: 1 },
+          },
+        },
+        lg: {
+          layout: {
+            moodTracker: { x: 0, y: 0, width: 2, height: 1 },
+            recommendations: { x: 2, y: 0, width: 1, height: 1 },
+            goals: { x: 0, y: 1, width: 1, height: 1 },
+            community: { x: 1, y: 1, width: 1, height: 1 },
+            settings: { x: 2, y: 1, width: 1, height: 1 },
+          },
+        },
+      },
     };
   });
 
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      setDashboardConfig((prevConfig) => {
-        const newLayout = { ...prevConfig.layout };
-        const newComponents = { ...prevConfig.components };
-        const activeComponent = newComponents[active.id];
-        const overComponent = newComponents[over.id];
-        newLayout[active.id] = overComponent.layout;
-        newLayout[over.id] = activeComponent.layout;
-        return { layout: newLayout, components: newComponents };
-      });
+  const handleResize = (id: string, width: number, height: number) => {
+    const newConfig = { ...dashboardConfig };
+    newConfig.components[id].width = width;
+    newConfig.components[id].height = height;
+    setDashboardConfig(newConfig);
+  };
+
+  const handleMove = (id: string, x: number, y: number) => {
+    const newConfig = { ...dashboardConfig };
+    newConfig.components[id].x = x;
+    newConfig.components[id].y = y;
+    setDashboardConfig(newConfig);
+  };
+
+  const handleRemove = (id: string) => {
+    const newConfig = { ...dashboardConfig };
+    delete newConfig.components[id];
+    setDashboardConfig(newConfig);
+  };
+
+  const getLayout = () => {
+    const width = window.innerWidth;
+    if (width < 768) {
+      return dashboardConfig.breakpoints.sm.layout;
+    } else if (width < 1024) {
+      return dashboardConfig.breakpoints.md.layout;
+    } else {
+      return dashboardConfig.breakpoints.lg.layout;
     }
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext onDragEnd={handleMove}>
       <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
         <DashboardLayout>
-          {Object.keys(dashboardConfig.components).map((componentId) => {
-            const component = dashboardConfig.components[componentId];
-            return (
-              <div
-                key={componentId}
-                style={{
-                  position: 'absolute',
-                  left: `${dashboardConfig.layout[componentId].x * 100}%`,
-                  top: `${dashboardConfig.layout[componentId].y * 100}%`,
-                  width: `${dashboardConfig.layout[componentId].width * 100}%`,
-                  height: `${dashboardConfig.layout[componentId].height * 100}%`,
-                }}
-              >
-                {component.component}
-              </div>
-            );
-          })}
-        </DashboardLayout>
-      </SortableContext>
-      <DragOverlay>
-        {({ dragging }) =>
-          dragging ? (
+          {Object.keys(dashboardConfig.components).map((id) => (
             <div
+              key={id}
               style={{
                 position: 'absolute',
-                left: `${dashboardConfig.layout[dragging.id].x * 100}%`,
-                top: `${dashboardConfig.layout[dragging.id].y * 100}%`,
-                width: `${dashboardConfig.layout[dragging.id].width * 100}%`,
-                height: `${dashboardConfig.layout[dragging.id].height * 100}%`,
-                opacity: 0.5,
+                left: `${getLayout()[id].x * 100}%`,
+                top: `${getLayout()[id].y * 100}%`,
+                width: `${getLayout()[id].width * 100}%`,
+                height: `${getLayout()[id].height * 100}%`,
               }}
             >
-              {dashboardConfig.components[dragging.id].component}
+              {dashboardConfig.components[id].component}
+              {dashboardConfig.components[id].resizable && (
+                <button onClick={() => handleResize(id, getLayout()[id].width + 1, getLayout()[id].height + 1)}>Resize</button>
+              )}
+              {dashboardConfig.components[id].removable && (
+                <button onClick={() => handleRemove(id)}>Remove</button>
+              )}
             </div>
-          ) : null
-        }
-      </DragOverlay>
+          ))}
+        </DashboardLayout>
+      </SortableContext>
     </DndContext>
   );
 }

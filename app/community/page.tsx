@@ -42,6 +42,8 @@ export default function CommunityPage() {
     category: '',
     tags: [],
     searchQuery: '',
+    sortBy: 'newest',
+    sortOrder: 'desc',
   });
 
   useEffect(() => {
@@ -74,54 +76,48 @@ export default function CommunityPage() {
   useEffect(() => {
     const filterPosts = () => {
       const filtered = posts.filter((post) => {
-        const categoryMatch = filterOptions.category === '' || post.category === filterOptions.category;
-        const tagMatch = filterOptions.tags.length === 0 || filterOptions.tags.some((tag) => post.tags.includes(tag));
-        const searchMatch = post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase());
-        return categoryMatch && tagMatch && searchMatch;
+        const categoryMatch = filterOptions.category ? post.category === filterOptions.category : true;
+        const tagsMatch = filterOptions.tags.length ? filterOptions.tags.every((tag) => post.tags.includes(tag)) : true;
+        const searchQueryMatch = filterOptions.searchQuery ? post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase()) : true;
+        return categoryMatch && tagsMatch && searchQueryMatch;
       });
-      setFilteredPosts(filtered);
+      const sorted = filtered.sort((a, b) => {
+        if (filterOptions.sortBy === 'newest') {
+          return filterOptions.sortOrder === 'desc' ? b.createdAt - a.createdAt : a.createdAt - b.createdAt;
+        } else if (filterOptions.sortBy === 'oldest') {
+          return filterOptions.sortOrder === 'desc' ? a.createdAt - b.createdAt : b.createdAt - a.createdAt;
+        } else if (filterOptions.sortBy === 'mostReactions') {
+          return filterOptions.sortOrder === 'desc' ? postReactions[b.id].length - postReactions[a.id].length : postReactions[a.id].length - postReactions[b.id].length;
+        } else if (filterOptions.sortBy === 'mostComments') {
+          return filterOptions.sortOrder === 'desc' ? postComments[b.id].length - postComments[a.id].length : postComments[a.id].length - postComments[b.id].length;
+        }
+      });
+      setFilteredPosts(sorted);
     };
     filterPosts();
-  }, [filterOptions, posts]);
+  }, [posts, filterOptions]);
 
-  const handleSearch = (query: string) => {
-    setFilterOptions((prevOptions) => ({ ...prevOptions, searchQuery: query }));
+  const handleFilterChange = (key, value) => {
+    setFilterOptions((prevOptions) => ({ ...prevOptions, [key]: value }));
   };
 
-  const handleCategoryChange = (category: string) => {
-    setFilterOptions((prevOptions) => ({ ...prevOptions, category }));
-  };
-
-  const handleTagChange = (tags: string[]) => {
-    setFilterOptions((prevOptions) => ({ ...prevOptions, tags }));
-  };
-
-  const handleSortChange = (sortOrder: string) => {
-    setSortOrder(sortOrder);
-    const sortedPosts = filteredPosts.sort((a, b) => {
-      if (sortOrder === 'newest') {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      } else if (sortOrder === 'oldest') {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      } else if (sortOrder === 'mostReactions') {
-        return postReactions[b.id].length - postReactions[a.id].length;
-      } else if (sortOrder === 'mostComments') {
-        return postComments[b.id].length - postComments[a.id].length;
-      }
-    });
-    setFilteredPosts(sortedPosts);
+  const handleSortChange = (sortBy, sortOrder) => {
+    setFilterOptions((prevOptions) => ({ ...prevOptions, sortBy, sortOrder }));
   };
 
   return (
     <div>
       <h1>Community Page</h1>
       <input
-        type="search"
+        type="text"
         value={filterOptions.searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
+        onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
         placeholder="Search posts"
       />
-      <select value={filterOptions.category} onChange={(e) => handleCategoryChange(e.target.value)}>
+      <select
+        value={filterOptions.category}
+        onChange={(e) => handleFilterChange('category', e.target.value)}
+      >
         <option value="">All categories</option>
         {categories.map((category) => (
           <option key={category} value={category}>
@@ -130,32 +126,31 @@ export default function CommunityPage() {
         ))}
       </select>
       <select
-        multiple
-        value={filterOptions.tags}
-        onChange={(e) => handleTagChange(Array.from(e.target.selectedOptions, (option) => option.value))}
+        value={filterOptions.sortBy}
+        onChange={(e) => handleSortChange(e.target.value, filterOptions.sortOrder)}
       >
-        {tags.map((tag) => (
-          <option key={tag} value={tag}>
-            {tag}
-          </option>
-        ))}
-      </select>
-      <select value={sortOrder} onChange={(e) => handleSortChange(e.target.value)}>
         <option value="newest">Newest</option>
         <option value="oldest">Oldest</option>
         <option value="mostReactions">Most reactions</option>
         <option value="mostComments">Most comments</option>
       </select>
-      {filteredPosts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-          <p>Category: {post.category}</p>
-          <p>Tags: {post.tags.join(', ')}</p>
-          <p>Reactions: {postReactions[post.id].length}</p>
-          <p>Comments: {postComments[post.id].length}</p>
-        </div>
-      ))}
+      <select
+        value={filterOptions.sortOrder}
+        onChange={(e) => handleSortChange(filterOptions.sortBy, e.target.value)}
+      >
+        <option value="desc">Descending</option>
+        <option value="asc">Ascending</option>
+      </select>
+      <ul>
+        {filteredPosts.map((post) => (
+          <li key={post.id}>
+            <h2>{post.title}</h2>
+            <p>{post.content}</p>
+            <p>Reactions: {postReactions[post.id].length}</p>
+            <p>Comments: {postComments[post.id].length}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
