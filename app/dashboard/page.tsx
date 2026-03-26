@@ -107,27 +107,142 @@ const MemoizedSettings = React.memo(() => (
   </Suspense>
 ));
 
-export default function DashboardPage() {
-  const [moodData, setMoodData] = useState(() => {
-    const storedMoodData = localStorage.getItem('moodData');
-    return storedMoodData ? JSON.parse(storedMoodData) : [];
-  });
-  const [goalData, setGoalData] = useState(() => {
-    const storedGoalData = localStorage.getItem('goalData');
-    return storedGoalData ? JSON.parse(storedGoalData) : [];
-  });
+const components: Component[] = [
+  { id: 'moodTracker', component: <MemoizedMoodTracker /> },
+  { id: 'recommendations', component: <MemoizedRecommendations /> },
+  { id: 'goals', component: <MemoizedGoals /> },
+  { id: 'community', component: <MemoizedCommunity /> },
+  { id: 'settings', component: <MemoizedSettings /> },
+];
+
+const initialLayout: Layout = {
+  moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+  recommendations: { x: 300, y: 0, width: 300, height: 200 },
+  goals: { x: 0, y: 200, width: 300, height: 200 },
+  community: { x: 300, y: 200, width: 300, height: 200 },
+  settings: { x: 0, y: 400, width: 300, height: 200 },
+};
+
+const initialDashboardConfig: DashboardConfig = {
+  layout: initialLayout,
+  components: {
+    moodTracker: {
+      id: 'moodTracker',
+      component: <MemoizedMoodTracker />,
+      removable: false,
+      resizable: true,
+    },
+    recommendations: {
+      id: 'recommendations',
+      component: <MemoizedRecommendations />,
+      removable: false,
+      resizable: true,
+    },
+    goals: {
+      id: 'goals',
+      component: <MemoizedGoals />,
+      removable: false,
+      resizable: true,
+    },
+    community: {
+      id: 'community',
+      component: <MemoizedCommunity />,
+      removable: false,
+      resizable: true,
+    },
+    settings: {
+      id: 'settings',
+      component: <MemoizedSettings />,
+      removable: false,
+      resizable: true,
+    },
+  },
+  breakpoints: {
+    sm: {
+      layout: {
+        moodTracker: { x: 0, y: 0, width: 100, height: 100 },
+        recommendations: { x: 100, y: 0, width: 100, height: 100 },
+        goals: { x: 0, y: 100, width: 100, height: 100 },
+        community: { x: 100, y: 100, width: 100, height: 100 },
+        settings: { x: 0, y: 200, width: 100, height: 100 },
+      },
+    },
+    md: {
+      layout: {
+        moodTracker: { x: 0, y: 0, width: 200, height: 200 },
+        recommendations: { x: 200, y: 0, width: 200, height: 200 },
+        goals: { x: 0, y: 200, width: 200, height: 200 },
+        community: { x: 200, y: 200, width: 200, height: 200 },
+        settings: { x: 0, y: 400, width: 200, height: 200 },
+      },
+    },
+    lg: {
+      layout: {
+        moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+        recommendations: { x: 300, y: 0, width: 300, height: 200 },
+        goals: { x: 0, y: 200, width: 300, height: 200 },
+        community: { x: 300, y: 200, width: 300, height: 200 },
+        settings: { x: 0, y: 400, width: 300, height: 200 },
+      },
+    },
+  },
+};
+
+const Page = () => {
+  const [dashboardConfig, setDashboardConfig] = useState(initialDashboardConfig);
+  const [dragging, setDragging] = useState(false);
+
+  const handleDragStart = () => {
+    setDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setDragging(false);
+  };
+
+  const handleDragOver = (event: any) => {
+    event.preventDefault();
+  };
+
+  const handleDrop = (event: any) => {
+    event.preventDefault();
+    const componentId = event.dataTransfer.getData('componentId');
+    const x = event.clientX;
+    const y = event.clientY;
+    const component = components.find((c) => c.id === componentId);
+    if (component) {
+      const newLayout = { ...dashboardConfig.layout };
+      newLayout[componentId] = { x, y, width: component.component.props.width, height: component.component.props.height };
+      setDashboardConfig({ ...dashboardConfig, layout: newLayout });
+    }
+  };
 
   return (
-    <DashboardLayout>
-      <DndContext collisionDetection={closestCenter}>
-        <SortableContext items={[]} strategy={rectSortingStrategy}>
-          <MemoizedMoodTracker />
-          <MemoizedRecommendations />
-          <MemoizedGoals />
-          <MemoizedCommunity />
-          <MemoizedSettings />
-        </SortableContext>
-      </DndContext>
-    </DashboardLayout>
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <SortableContext items={components} strategy={rectSortingStrategy}>
+        <DashboardLayout>
+          {components.map((component) => (
+            <div
+              key={component.id}
+              style={{
+                position: 'absolute',
+                left: dashboardConfig.layout[component.id].x,
+                top: dashboardConfig.layout[component.id].y,
+                width: dashboardConfig.layout[component.id].width,
+                height: dashboardConfig.layout[component.id].height,
+              }}
+              draggable
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              data-component-id={component.id}
+            >
+              {component.component}
+            </div>
+          ))}
+        </DashboardLayout>
+      </SortableContext>
+    </DndContext>
   );
-}
+};
+
+export default Page;

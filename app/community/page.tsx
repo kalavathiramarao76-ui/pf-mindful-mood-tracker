@@ -69,27 +69,97 @@ export default function CommunityPage() {
       setPostComments((prevComments) => ({ ...prevComments, ...commentsMap }));
       const uniqueCategories = [...new Set(data.map((post) => post.category))];
       setCategories((prevCategories) => [...new Set([...prevCategories, ...uniqueCategories])]);
+      const uniqueTags = [...new Set(data.flatMap((post) => post.tags))];
+      setTags((prevTags) => [...new Set([...prevTags, ...uniqueTags])]);
       setLoading(false);
     };
     fetchPosts();
   }, [pageNumber]);
 
-  const handleScroll = () => {
-    if (hasMorePosts && !loading) {
-      const scrollPosition = window.scrollY + window.innerHeight;
-      const documentHeight = document.body.offsetHeight;
-      if (scrollPosition >= documentHeight * 0.8) {
-        setPageNumber((prevPageNumber) => prevPageNumber + 1);
-      }
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!searchQuery) return;
+      const data = await getCommunityPosts(1, searchQuery);
+      const suggestions = data.map((post) => post.title);
+      setSuggestions(suggestions);
+    };
+    fetchSuggestions();
+  }, [searchQuery]);
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    const data = await getCommunityPosts(1, query);
+    setSearchResults(data);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    const filteredPosts = posts.filter((post) => post.category === category);
+    setFilteredPosts(filteredPosts);
+  };
+
+  const handleTagChange = (tag: string) => {
+    const isSelected = selectedTags.includes(tag);
+    if (isSelected) {
+      const newTags = selectedTags.filter((t) => t !== tag);
+      setSelectedTags(newTags);
+      const filteredPosts = posts.filter((post) => post.tags.some((t) => newTags.includes(t)));
+      setFilteredPosts(filteredPosts);
+    } else {
+      const newTags = [...selectedTags, tag];
+      setSelectedTags(newTags);
+      const filteredPosts = posts.filter((post) => post.tags.some((t) => newTags.includes(t)));
+      setFilteredPosts(filteredPosts);
     }
   };
 
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMorePosts, loading]);
+  const handleFilterChange = (filter: string, value: string | string[]) => {
+    setFilterOptions((prevFilter) => ({ ...prevFilter, [filter]: value }));
+    const filteredPosts = posts.filter((post) => {
+      if (filter === 'category') return post.category === value;
+      if (filter === 'tags') return post.tags.some((t) => value.includes(t));
+      if (filter === 'searchQuery') return post.title.includes(value);
+      return true;
+    });
+    setFilteredPosts(filteredPosts);
+  };
 
   return (
-    // your JSX code here
+    <div>
+      <input
+        type="search"
+        value={searchQuery}
+        onChange={(e) => handleSearch(e.target.value)}
+        placeholder="Search posts"
+      />
+      <Autocomplete
+        suggestions={suggestions}
+        onSuggestionClick={(suggestion) => handleSearch(suggestion)}
+      />
+      <select value={selectedCategory} onChange={(e) => handleCategoryChange(e.target.value)}>
+        <option value="">All categories</option>
+        {categories.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
+      </select>
+      <div>
+        {tags.map((tag) => (
+          <button key={tag} onClick={() => handleTagChange(tag)}>
+            {tag}
+          </button>
+        ))}
+      </div>
+      <button onClick={() => handleFilterChange('category', selectedCategory)}>Filter by category</button>
+      <button onClick={() => handleFilterChange('tags', selectedTags)}>Filter by tags</button>
+      <button onClick={() => handleFilterChange('searchQuery', searchQuery)}>Filter by search query</button>
+      {filteredPosts.map((post) => (
+        <div key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
+        </div>
+      ))}
+    </div>
   );
 }
