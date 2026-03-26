@@ -98,80 +98,34 @@ export default function DashboardPage() {
   const [dashboardConfig, setDashboardConfig] = useState(() => {
     const storedDashboardConfig = localStorage.getItem('dashboardConfig');
     return storedDashboardConfig ? JSON.parse(storedDashboardConfig) : {
-      layout: {
-        moodTracker: { x: 0, y: 0, width: 1, height: 1 },
-        recommendations: { x: 1, y: 0, width: 1, height: 1 },
-        goals: { x: 0, y: 1, width: 1, height: 1 },
-        community: { x: 1, y: 1, width: 1, height: 1 },
-        settings: { x: 0, y: 2, width: 1, height: 1 },
-      },
-      components: {
-        moodTracker: {
-          id: 'moodTracker',
-          component: <MoodTracker />,
-          removable: false,
-          resizable: true,
-        },
-        recommendations: {
-          id: 'recommendations',
-          component: <Recommendations />,
-          removable: false,
-          resizable: true,
-        },
-        goals: {
-          id: 'goals',
-          component: <Goals />,
-          removable: false,
-          resizable: true,
-        },
-        community: {
-          id: 'community',
-          component: <Community />,
-          removable: false,
-          resizable: true,
-        },
-        settings: {
-          id: 'settings',
-          component: <Settings />,
-          removable: false,
-          resizable: true,
-        },
-      },
-      breakpoints: {
-        desktop: {
-          layout: {
-            moodTracker: { x: 0, y: 0, width: 1, height: 1 },
-            recommendations: { x: 1, y: 0, width: 1, height: 1 },
-            goals: { x: 0, y: 1, width: 1, height: 1 },
-            community: { x: 1, y: 1, width: 1, height: 1 },
-            settings: { x: 0, y: 2, width: 1, height: 1 },
-          },
-        },
-        mobile: {
-          layout: {
-            moodTracker: { x: 0, y: 0, width: 1, height: 1 },
-            recommendations: { x: 0, y: 1, width: 1, height: 1 },
-            goals: { x: 0, y: 2, width: 1, height: 1 },
-            community: { x: 0, y: 3, width: 1, height: 1 },
-            settings: { x: 0, y: 4, width: 1, height: 1 },
-          },
-        },
-      },
+      layout: {},
+      components: {},
+      breakpoints: {},
     };
   });
-  const [tutorialIndex, setTutorialIndex] = useState(0);
-  const [showTutorial, setShowTutorial] = useState(true);
+  const [tutorialStep, setTutorialStep] = useState(() => {
+    const storedTutorialStep = localStorage.getItem('tutorialStep');
+    return storedTutorialStep ? parseInt(storedTutorialStep) : 0;
+  });
+  const [showTutorial, setShowTutorial] = useState(() => {
+    const storedShowTutorial = localStorage.getItem('showTutorial');
+    return storedShowTutorial === 'true';
+  });
 
   const handleNextTutorialStep = () => {
-    if (tutorialIndex < tutorialSteps.length - 1) {
-      setTutorialIndex(tutorialIndex + 1);
+    if (tutorialStep < tutorialSteps.length - 1) {
+      setTutorialStep(tutorialStep + 1);
+      localStorage.setItem('tutorialStep', (tutorialStep + 1).toString());
     } else {
+      setTutorialStep(0);
       setShowTutorial(false);
+      localStorage.setItem('showTutorial', 'false');
     }
   };
 
   const handleSkipTutorial = () => {
     setShowTutorial(false);
+    localStorage.setItem('showTutorial', 'false');
   };
 
   return (
@@ -192,14 +146,14 @@ export default function DashboardPage() {
         >
           <div
             style={{
-              backgroundColor: 'white',
+              backgroundColor: '#fff',
               padding: '20px',
               borderRadius: '10px',
               boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
             }}
           >
-            <h2>{tutorialSteps[tutorialIndex].title}</h2>
-            <p>{tutorialSteps[tutorialIndex].description}</p>
+            <h2>{tutorialSteps[tutorialStep].title}</h2>
+            <p>{tutorialSteps[tutorialStep].description}</p>
             <button onClick={handleNextTutorialStep}>Next</button>
             <button onClick={handleSkipTutorial}>Skip</button>
           </div>
@@ -207,27 +161,11 @@ export default function DashboardPage() {
       )}
       <DndContext collisionDetection={closestCenter}>
         <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gridGap: '10px',
-            }}
-          >
-            {Object.keys(dashboardConfig.components).map((componentId) => (
-              <div
-                key={componentId}
-                style={{
-                  gridColumn: dashboardConfig.layout[componentId].x,
-                  gridRow: dashboardConfig.layout[componentId].y,
-                  width: `${dashboardConfig.layout[componentId].width * 100}%`,
-                  height: `${dashboardConfig.layout[componentId].height * 100}%`,
-                }}
-              >
-                {dashboardConfig.components[componentId].component}
-              </div>
-            ))}
-          </div>
+          <MoodTracker />
+          <Recommendations />
+          <Goals />
+          <Community />
+          <Settings />
         </SortableContext>
       </DndContext>
     </DashboardLayout>
