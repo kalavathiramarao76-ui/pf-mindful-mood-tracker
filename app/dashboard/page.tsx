@@ -96,157 +96,69 @@ export default function DashboardPage() {
     const storedGoalData = localStorage.getItem('goalData');
     return storedGoalData ? JSON.parse(storedGoalData) : [];
   });
-  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
-    layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-      recommendations: { x: 300, y: 0, width: 300, height: 200 },
-      goals: { x: 0, y: 200, width: 300, height: 200 },
-      community: { x: 300, y: 200, width: 300, height: 200 },
-      settings: { x: 0, y: 400, width: 300, height: 200 },
-    },
-    components: {
-      moodTracker: {
-        id: 'moodTracker',
-        component: <MoodTracker />,
-        removable: false,
-        resizable: true,
-      },
-      recommendations: {
-        id: 'recommendations',
-        component: <Recommendations />,
-        removable: false,
-        resizable: true,
-      },
-      goals: {
-        id: 'goals',
-        component: <Goals />,
-        removable: false,
-        resizable: true,
-      },
-      community: {
-        id: 'community',
-        component: <Community />,
-        removable: false,
-        resizable: true,
-      },
-      settings: {
-        id: 'settings',
-        component: <Settings />,
-        removable: false,
-        resizable: true,
-      },
-    },
-    breakpoints: {
-      sm: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 100, height: 100 },
-          recommendations: { x: 100, y: 0, width: 100, height: 100 },
-          goals: { x: 0, y: 100, width: 100, height: 100 },
-          community: { x: 100, y: 100, width: 100, height: 100 },
-          settings: { x: 0, y: 200, width: 100, height: 100 },
-        },
-      },
-      md: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 200, height: 150 },
-          recommendations: { x: 200, y: 0, width: 200, height: 150 },
-          goals: { x: 0, y: 150, width: 200, height: 150 },
-          community: { x: 200, y: 150, width: 200, height: 150 },
-          settings: { x: 0, y: 300, width: 200, height: 150 },
-        },
-      },
-      lg: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-          recommendations: { x: 300, y: 0, width: 300, height: 200 },
-          goals: { x: 0, y: 200, width: 300, height: 200 },
-          community: { x: 300, y: 200, width: 300, height: 200 },
-          settings: { x: 0, y: 400, width: 300, height: 200 },
-        },
-      },
-    },
+  const [showTutorial, setShowTutorial] = useState(() => {
+    const storedTutorialStatus = localStorage.getItem('showTutorial');
+    return storedTutorialStatus === null || storedTutorialStatus === 'true';
   });
+  const [currentTutorialStep, setCurrentTutorialStep] = useState(0);
 
-  const handleResize = (id: string, width: number, height: number) => {
-    setDashboardConfig((prevConfig) => {
-      const newConfig = { ...prevConfig };
-      newConfig.components[id].component = React.cloneElement(newConfig.components[id].component, {
-        width,
-        height,
-      });
-      return newConfig;
-    });
+  const handleTutorialNext = () => {
+    if (currentTutorialStep < tutorialSteps.length - 1) {
+      setCurrentTutorialStep(currentTutorialStep + 1);
+    } else {
+      setShowTutorial(false);
+      localStorage.setItem('showTutorial', 'false');
+    }
   };
 
-  const handleMove = (id: string, x: number, y: number) => {
-    setDashboardConfig((prevConfig) => {
-      const newConfig = { ...prevConfig };
-      newConfig.layout[id] = { x, y, width: newConfig.layout[id].width, height: newConfig.layout[id].height };
-      return newConfig;
-    });
-  };
-
-  const handleRemove = (id: string) => {
-    setDashboardConfig((prevConfig) => {
-      const newConfig = { ...prevConfig };
-      delete newConfig.components[id];
-      delete newConfig.layout[id];
-      return newConfig;
-    });
-  };
-
-  const handleAdd = (id: string) => {
-    setDashboardConfig((prevConfig) => {
-      const newConfig = { ...prevConfig };
-      newConfig.components[id] = {
-        id,
-        component: <MoodTracker />,
-        removable: true,
-        resizable: true,
-      };
-      newConfig.layout[id] = { x: 0, y: 0, width: 300, height: 200 };
-      return newConfig;
-    });
-  };
-
-  const handleBreakpointChange = (breakpoint: string) => {
-    setDashboardConfig((prevConfig) => {
-      const newConfig = { ...prevConfig };
-      newConfig.layout = newConfig.breakpoints[breakpoint].layout;
-      return newConfig;
-    });
+  const handleTutorialSkip = () => {
+    setShowTutorial(false);
+    localStorage.setItem('showTutorial', 'false');
   };
 
   return (
-    <DndContext onDragEnd={(event) => handleMove(event.id, event.x, event.y)}>
-      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                left: dashboardConfig.layout[id].x,
-                top: dashboardConfig.layout[id].y,
-                width: dashboardConfig.layout[id].width,
-                height: dashboardConfig.layout[id].height,
-              }}
-            >
-              {dashboardConfig.components[id].component}
-              {dashboardConfig.components[id].resizable && (
-                <button onClick={() => handleResize(id, 300, 200)}>Resize</button>
-              )}
-              {dashboardConfig.components[id].removable && (
-                <button onClick={() => handleRemove(id)}>Remove</button>
-              )}
-            </div>
-          ))}
-          <button onClick={() => handleAdd('newComponent')}>Add Component</button>
-          <button onClick={() => handleBreakpointChange('sm')}>Switch to Small Breakpoint</button>
-          <button onClick={() => handleBreakpointChange('md')}>Switch to Medium Breakpoint</button>
-          <button onClick={() => handleBreakpointChange('lg')}>Switch to Large Breakpoint</button>
-        </DashboardLayout>
-      </SortableContext>
-    </DndContext>
+    <DashboardLayout>
+      {showTutorial && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              padding: '20px',
+              borderRadius: '10px',
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h2>{tutorialSteps[currentTutorialStep].title}</h2>
+            <p>{tutorialSteps[currentTutorialStep].description}</p>
+            <button onClick={handleTutorialNext}>Next</button>
+            <button onClick={handleTutorialSkip}>Skip</button>
+          </div>
+        </div>
+      )}
+      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+        <SortableContext items={items} strategy={rectSortingStrategy}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <MemoizedMoodTracker />
+            <MemoizedRecommendations />
+            <MemoizedGoals />
+            <MemoizedCommunity />
+            <MemoizedSettings />
+          </Suspense>
+        </SortableContext>
+      </DndContext>
+    </DashboardLayout>
   );
 }
