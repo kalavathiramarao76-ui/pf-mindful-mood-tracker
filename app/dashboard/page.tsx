@@ -109,29 +109,114 @@ export default function DashboardPage() {
         const overLayout = newLayout[over.id];
         newLayout[active.id] = overLayout;
         newLayout[over.id] = activeLayout;
-        return { layout: newLayout, components: newComponents };
+        return { ...prevConfig, layout: newLayout };
       });
     }
+  };
+
+  const handleResize = (id: string, width: number, height: number) => {
+    setDashboardConfig((prevConfig) => {
+      const newLayout = { ...prevConfig.layout };
+      newLayout[id] = { ...newLayout[id], width, height };
+      return { ...prevConfig, layout: newLayout };
+    });
+  };
+
+  const handleRemove = (id: string) => {
+    setDashboardConfig((prevConfig) => {
+      const newComponents = { ...prevConfig.components };
+      delete newComponents[id];
+      const newLayout = { ...prevConfig.layout };
+      delete newLayout[id];
+      return { ...prevConfig, components: newComponents, layout: newLayout };
+    });
+  };
+
+  const handleAdd = (id: string) => {
+    setDashboardConfig((prevConfig) => {
+      const newComponents = { ...prevConfig.components };
+      const newLayout = { ...prevConfig.layout };
+      switch (id) {
+        case 'moodTracker':
+          newComponents.moodTracker = {
+            id: 'moodTracker',
+            component: <MoodTracker />,
+            removable: true,
+            resizable: true,
+          };
+          newLayout.moodTracker = { x: 0, y: 0, width: 1, height: 1 };
+          break;
+        case 'recommendations':
+          newComponents.recommendations = {
+            id: 'recommendations',
+            component: <Recommendations />,
+            removable: true,
+            resizable: true,
+          };
+          newLayout.recommendations = { x: 1, y: 0, width: 1, height: 1 };
+          break;
+        case 'goals':
+          newComponents.goals = {
+            id: 'goals',
+            component: <Goals />,
+            removable: true,
+            resizable: true,
+          };
+          newLayout.goals = { x: 0, y: 1, width: 1, height: 1 };
+          break;
+        case 'community':
+          newComponents.community = {
+            id: 'community',
+            component: <Community />,
+            removable: true,
+            resizable: true,
+          };
+          newLayout.community = { x: 1, y: 1, width: 1, height: 1 };
+          break;
+        case 'settings':
+          newComponents.settings = {
+            id: 'settings',
+            component: <Settings />,
+            removable: true,
+            resizable: true,
+          };
+          newLayout.settings = { x: 0, y: 2, width: 1, height: 1 };
+          break;
+        default:
+          break;
+      }
+      return { ...prevConfig, components: newComponents, layout: newLayout };
+    });
   };
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <DashboardLayout>
-        {Object.keys(dashboardConfig.components).map((key) => (
-          <SortableContext key={key} items={[key]} strategy={rectSortingStrategy}>
-            <div
-              style={{
-                position: 'absolute',
-                left: `${dashboardConfig.layout[key].x * 100}%`,
-                top: `${dashboardConfig.layout[key].y * 100}%`,
-                width: `${dashboardConfig.layout[key].width * 100}%`,
-                height: `${dashboardConfig.layout[key].height * 100}%`,
-              }}
-            >
-              {dashboardConfig.components[key].component}
-            </div>
-          </SortableContext>
+        {Object.keys(dashboardConfig.components).map((id) => (
+          <div
+            key={id}
+            style={{
+              position: 'absolute',
+              left: `${dashboardConfig.layout[id].x * 100}%`,
+              top: `${dashboardConfig.layout[id].y * 100}%`,
+              width: `${dashboardConfig.layout[id].width * 100}%`,
+              height: `${dashboardConfig.layout[id].height * 100}%`,
+            }}
+          >
+            {dashboardConfig.components[id].component}
+            {dashboardConfig.components[id].resizable && (
+              <button onClick={() => handleResize(id, 0.5, 0.5)}>Resize</button>
+            )}
+            {dashboardConfig.components[id].removable && (
+              <button onClick={() => handleRemove(id)}>Remove</button>
+            )}
+          </div>
         ))}
+        <button onClick={() => handleAdd('moodTracker')}>Add Mood Tracker</button>
+        <button onClick={() => handleAdd('recommendations')}>Add Recommendations</button>
+        <button onClick={() => handleAdd('goals')}>Add Goals</button>
+        <button onClick={() => handleAdd('community')}>Add Community</button>
+        <button onClick={() => handleAdd('settings')}>Add Settings</button>
       </DashboardLayout>
     </DndContext>
   );

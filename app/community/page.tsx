@@ -37,6 +37,12 @@ export default function CommunityPage() {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
+  const [sortOrder, setSortOrder] = useState('newest');
+  const [filterOptions, setFilterOptions] = useState({
+    category: '',
+    tags: [],
+    searchQuery: '',
+  });
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -67,37 +73,85 @@ export default function CommunityPage() {
 
   useEffect(() => {
     const filterPosts = () => {
-      if (searchQuery.trim() === '' && selectedCategory === '' && selectedTags.length === 0) {
+      if (filterOptions.searchQuery.trim() === '' && filterOptions.category === '' && filterOptions.tags.length === 0) {
         setFilteredPosts(posts);
       } else {
         const filtered = posts.filter((post) => {
-          const hasCategory = selectedCategory === '' || post.category === selectedCategory;
-          const hasTags = selectedTags.length === 0 || selectedTags.some((tag) => post.tags?.includes(tag));
-          const hasSearchQuery = searchQuery.trim() === '' || post.content.toLowerCase().includes(searchQuery.toLowerCase());
-          return hasCategory && hasTags && hasSearchQuery;
+          const categoryMatch = filterOptions.category === '' || post.category === filterOptions.category;
+          const tagsMatch = filterOptions.tags.length === 0 || filterOptions.tags.some((tag) => post.tags?.includes(tag));
+          const searchQueryMatch = filterOptions.searchQuery.trim() === '' || post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase());
+          return categoryMatch && tagsMatch && searchQueryMatch;
         });
         setFilteredPosts(filtered);
       }
     };
     filterPosts();
-  }, [posts, searchQuery, selectedCategory, selectedTags]);
+  }, [posts, filterOptions]);
 
-  const handleScroll = () => {
-    const scrollPosition = window.scrollY + window.innerHeight;
-    const height = document.body.offsetHeight;
-    if (scrollPosition >= height * 0.9 && hasMorePosts && !loading) {
-      setIsFetching(true);
-      setPageNumber((prevPageNumber) => prevPageNumber + 1);
-      setIsFetching(false);
-    }
+  const handleSearchQueryChange = (e) => {
+    setFilterOptions((prevOptions) => ({ ...prevOptions, searchQuery: e.target.value }));
   };
 
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMorePosts, loading]);
+  const handleCategoryChange = (category) => {
+    setFilterOptions((prevOptions) => ({ ...prevOptions, category }));
+  };
+
+  const handleTagsChange = (tags) => {
+    setFilterOptions((prevOptions) => ({ ...prevOptions, tags }));
+  };
+
+  const handleSortOrderChange = (sortOrder) => {
+    setSortOrder(sortOrder);
+    const sortedPosts = filteredPosts.sort((a, b) => {
+      if (sortOrder === 'newest') {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (sortOrder === 'oldest') {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      } else if (sortOrder === 'mostReactions') {
+        return postReactions[b.id].length - postReactions[a.id].length;
+      } else if (sortOrder === 'mostComments') {
+        return postComments[b.id].length - postComments[a.id].length;
+      }
+    });
+    setFilteredPosts(sortedPosts);
+  };
 
   return (
-    // your JSX code here
+    <div>
+      <h1>Community Page</h1>
+      <input
+        type="search"
+        value={filterOptions.searchQuery}
+        onChange={handleSearchQueryChange}
+        placeholder="Search posts"
+      />
+      <select value={filterOptions.category} onChange={(e) => handleCategoryChange(e.target.value)}>
+        <option value="">All categories</option>
+        {categories.map((category) => (
+          <option key={category} value={category}>{category}</option>
+        ))}
+      </select>
+      <select multiple value={filterOptions.tags} onChange={(e) => handleTagsChange(Array.from(e.target.selectedOptions, (option) => option.value))}>
+        {tags.map((tag) => (
+          <option key={tag} value={tag}>{tag}</option>
+        ))}
+      </select>
+      <select value={sortOrder} onChange={(e) => handleSortOrderChange(e.target.value)}>
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="mostReactions">Most reactions</option>
+        <option value="mostComments">Most comments</option>
+      </select>
+      {filteredPosts.map((post) => (
+        <div key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
+          <p>Category: {post.category}</p>
+          <p>Tags: {post.tags?.join(', ')}</p>
+          <p>Reactions: {postReactions[post.id].length}</p>
+          <p>Comments: {postComments[post.id].length}</p>
+        </div>
+      ))}
+    </div>
   );
 }
