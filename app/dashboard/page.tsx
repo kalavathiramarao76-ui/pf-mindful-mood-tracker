@@ -109,59 +109,30 @@ export default function DashboardPage() {
         const overLayout = newLayout[over.id];
         newLayout[active.id] = overLayout;
         newLayout[over.id] = activeLayout;
-        return { ...prevConfig, layout: newLayout };
+        return { layout: newLayout, components: newComponents };
       });
     }
   };
 
-  const handleRemoveComponent = (id: string) => {
-    setDashboardConfig((prevConfig) => {
-      const newComponents = { ...prevConfig.components };
-      delete newComponents[id];
-      const newLayout = { ...prevConfig.layout };
-      delete newLayout[id];
-      return { ...prevConfig, components: newComponents, layout: newLayout };
-    });
-  };
-
-  const handleAddComponent = (component: Component) => {
-    setDashboardConfig((prevConfig) => {
-      const newComponents = { ...prevConfig.components };
-      newComponents[component.id] = {
-        id: component.id,
-        component: component.component,
-        removable: true,
-        resizable: true,
-      };
-      const newLayout = { ...prevConfig.layout };
-      newLayout[component.id] = { x: 0, y: 0, width: 1, height: 1 };
-      return { ...prevConfig, components: newComponents, layout: newLayout };
-    });
-  };
-
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div key={id} style={{
-              position: 'absolute',
-              left: `${dashboardConfig.layout[id].x * 100}%`,
-              top: `${dashboardConfig.layout[id].y * 100}%`,
-              width: `${dashboardConfig.layout[id].width * 100}%`,
-              height: `${dashboardConfig.layout[id].height * 100}%`,
-            }}>
-              {dashboardConfig.components[id].component}
-              {dashboardConfig.components[id].removable && (
-                <button onClick={() => handleRemoveComponent(id)}>Remove</button>
-              )}
+      <DashboardLayout>
+        {Object.keys(dashboardConfig.components).map((key) => (
+          <SortableContext key={key} items={[key]} strategy={rectSortingStrategy}>
+            <div
+              style={{
+                position: 'absolute',
+                left: `${dashboardConfig.layout[key].x * 100}%`,
+                top: `${dashboardConfig.layout[key].y * 100}%`,
+                width: `${dashboardConfig.layout[key].width * 100}%`,
+                height: `${dashboardConfig.layout[key].height * 100}%`,
+              }}
+            >
+              {dashboardConfig.components[key].component}
             </div>
-          ))}
-          <button onClick={() => handleAddComponent({ id: 'newComponent', component: <div>New Component</div> })}>
-            Add Component
-          </button>
-        </DashboardLayout>
-      </SortableContext>
+          </SortableContext>
+        ))}
+      </DashboardLayout>
     </DndContext>
   );
 }

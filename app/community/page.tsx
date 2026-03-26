@@ -72,7 +72,7 @@ export default function CommunityPage() {
       } else {
         const filtered = posts.filter((post) => {
           const hasCategory = selectedCategory === '' || post.category === selectedCategory;
-          const hasTags = selectedTags.length === 0 || selectedTags.some((tag) => post.tags.includes(tag));
+          const hasTags = selectedTags.length === 0 || selectedTags.some((tag) => post.tags?.includes(tag));
           const hasSearchQuery = searchQuery.trim() === '' || post.content.toLowerCase().includes(searchQuery.toLowerCase());
           return hasCategory && hasTags && hasSearchQuery;
         });
@@ -83,7 +83,9 @@ export default function CommunityPage() {
   }, [posts, searchQuery, selectedCategory, selectedTags]);
 
   const handleScroll = () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight && hasMorePosts && !loading) {
+    const scrollPosition = window.scrollY + window.innerHeight;
+    const height = document.body.offsetHeight;
+    if (scrollPosition >= height * 0.9 && hasMorePosts && !loading) {
       setIsFetching(true);
       setPageNumber((prevPageNumber) => prevPageNumber + 1);
       setIsFetching(false);
@@ -96,9 +98,6 @@ export default function CommunityPage() {
   }, [hasMorePosts, loading]);
 
   return (
-    <div>
-      {/* Your existing JSX code here */}
-      {isFetching && <div>Loading...</div>}
-    </div>
+    // your JSX code here
   );
 }
