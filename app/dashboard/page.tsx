@@ -113,11 +113,11 @@ const Page = () => {
 
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
     layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-      recommendations: { x: 300, y: 0, width: 300, height: 200 },
-      goals: { x: 0, y: 200, width: 300, height: 200 },
-      community: { x: 300, y: 200, width: 300, height: 200 },
-      settings: { x: 0, y: 400, width: 300, height: 200 },
+      moodTracker: { x: 0, y: 0, width: 300, height: 300 },
+      recommendations: { x: 300, y: 0, width: 300, height: 300 },
+      goals: { x: 0, y: 300, width: 300, height: 300 },
+      community: { x: 300, y: 300, width: 300, height: 300 },
+      settings: { x: 600, y: 0, width: 300, height: 300 },
     },
     components: {
       moodTracker: {
@@ -154,29 +154,11 @@ const Page = () => {
     breakpoints: {
       sm: {
         layout: {
-          moodTracker: { x: 0, y: 0, width: 100, height: 100 },
-          recommendations: { x: 100, y: 0, width: 100, height: 100 },
-          goals: { x: 0, y: 100, width: 100, height: 100 },
-          community: { x: 100, y: 100, width: 100, height: 100 },
-          settings: { x: 0, y: 200, width: 100, height: 100 },
-        },
-      },
-      md: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 200, height: 200 },
-          recommendations: { x: 200, y: 0, width: 200, height: 200 },
-          goals: { x: 0, y: 200, width: 200, height: 200 },
-          community: { x: 200, y: 200, width: 200, height: 200 },
-          settings: { x: 0, y: 400, width: 200, height: 200 },
-        },
-      },
-      lg: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-          recommendations: { x: 300, y: 0, width: 300, height: 200 },
-          goals: { x: 0, y: 200, width: 300, height: 200 },
-          community: { x: 300, y: 200, width: 300, height: 200 },
-          settings: { x: 0, y: 400, width: 300, height: 200 },
+          moodTracker: { x: 0, y: 0, width: 300, height: 300 },
+          recommendations: { x: 0, y: 300, width: 300, height: 300 },
+          goals: { x: 0, y: 600, width: 300, height: 300 },
+          community: { x: 0, y: 900, width: 300, height: 300 },
+          settings: { x: 0, y: 1200, width: 300, height: 300 },
         },
       },
     },
@@ -186,58 +168,41 @@ const Page = () => {
     const { active, over } = event;
     if (active.id !== over.id) {
       setDashboardConfig((prevConfig) => {
-        const newLayout = { ...prevConfig.layout };
-        const newComponents = { ...prevConfig.components };
-        const activeComponent = newComponents[active.id];
-        const overComponent = newComponents[over.id];
-        const activeLayout = newLayout[active.id];
-        const overLayout = newLayout[over.id];
-        newLayout[active.id] = overLayout;
-        newLayout[over.id] = activeLayout;
-        newComponents[active.id].component = overComponent.component;
-        newComponents[over.id].component = activeComponent.component;
-        return { ...prevConfig, layout: newLayout, components: newComponents };
+        const newConfig = { ...prevConfig };
+        const activeComponent = newConfig.components[active.id];
+        const overComponent = newConfig.components[over.id];
+        const newLayout = { ...newConfig.layout };
+        newLayout[active.id] = newLayout[over.id];
+        newLayout[over.id] = active.rect;
+        newConfig.layout = newLayout;
+        return newConfig;
       });
     }
   };
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
-          {Object.keys(dashboardConfig.components).map((componentId) => (
+      <DragOverlay>
+        {dashboardConfig.components[Object.keys(dashboardConfig.components).find((key) => dashboardConfig.components[key].component === dashboardConfig.components[Object.keys(dashboardConfig.components).find((key) => dashboardConfig.components[key].component === dashboardConfig.components[key].component)].component)]?.component}
+      </DragOverlay>
+      <DashboardLayout>
+        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
+          {Object.keys(dashboardConfig.components).map((key) => (
             <div
-              key={componentId}
+              key={key}
               style={{
                 position: 'absolute',
-                top: dashboardConfig.layout[componentId].y,
-                left: dashboardConfig.layout[componentId].x,
-                width: dashboardConfig.layout[componentId].width,
-                height: dashboardConfig.layout[componentId].height,
+                top: dashboardConfig.layout[key].y,
+                left: dashboardConfig.layout[key].x,
+                width: dashboardConfig.layout[key].width,
+                height: dashboardConfig.layout[key].height,
               }}
             >
-              {dashboardConfig.components[componentId].component}
+              {dashboardConfig.components[key].component}
             </div>
           ))}
-        </DashboardLayout>
-      </SortableContext>
-      <DragOverlay>
-        {({ dragging }) =>
-          dragging ? (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 1000,
-              }}
-            />
-          ) : null
-        }
-      </DragOverlay>
+        </SortableContext>
+      </DashboardLayout>
     </DndContext>
   );
 };
