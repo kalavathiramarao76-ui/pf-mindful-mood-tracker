@@ -69,97 +69,50 @@ export default function CommunityPage() {
       setPostComments((prevComments) => ({ ...prevComments, ...commentsMap }));
       const uniqueCategories = [...new Set(data.map((post) => post.category))];
       setCategories((prevCategories) => [...new Set([...prevCategories, ...uniqueCategories])]);
-      const uniqueTags = [...new Set(data.flatMap((post) => post.tags))];
-      setTags((prevTags) => [...new Set([...prevTags, ...uniqueTags])]);
-      setLoading(false);
+      applyFilters();
     };
     fetchPosts();
   }, [pageNumber]);
 
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (!searchQuery) return;
-      const data = await getCommunityPosts(1, searchQuery);
-      const suggestions = data.map((post) => post.title);
-      setSuggestions(suggestions);
-    };
-    fetchSuggestions();
-  }, [searchQuery]);
+    applyFilters();
+  }, [filterOptions, posts]);
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    const data = await getCommunityPosts(1, query);
-    setSearchResults(data);
-  };
-
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
-    const filteredPosts = posts.filter((post) => post.category === category);
-    setFilteredPosts(filteredPosts);
-  };
-
-  const handleTagChange = (tag: string) => {
-    const isSelected = selectedTags.includes(tag);
-    if (isSelected) {
-      const newTags = selectedTags.filter((t) => t !== tag);
-      setSelectedTags(newTags);
-      const filteredPosts = posts.filter((post) => post.tags.some((t) => newTags.includes(t)));
-      setFilteredPosts(filteredPosts);
-    } else {
-      const newTags = [...selectedTags, tag];
-      setSelectedTags(newTags);
-      const filteredPosts = posts.filter((post) => post.tags.some((t) => newTags.includes(t)));
-      setFilteredPosts(filteredPosts);
-    }
-  };
-
-  const handleFilterChange = (filter: string, value: string | string[]) => {
-    setFilterOptions((prevFilter) => ({ ...prevFilter, [filter]: value }));
+  const applyFilters = () => {
     const filteredPosts = posts.filter((post) => {
-      if (filter === 'category') return post.category === value;
-      if (filter === 'tags') return post.tags.some((t) => value.includes(t));
-      if (filter === 'searchQuery') return post.title.includes(value);
-      return true;
+      const categoryMatch = filterOptions.category === '' || post.category === filterOptions.category;
+      const tagsMatch = filterOptions.tags.length === 0 || filterOptions.tags.every((tag) => post.tags.includes(tag));
+      const searchQueryMatch = post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase());
+      return categoryMatch && tagsMatch && searchQueryMatch;
     });
-    setFilteredPosts(filteredPosts);
+
+    const sortedPosts = filteredPosts.sort((a, b) => {
+      switch (filterOptions.sortBy) {
+        case 'newest':
+          return filterOptions.sortOrder === 'desc' ? b.createdAt - a.createdAt : a.createdAt - b.createdAt;
+        case 'oldest':
+          return filterOptions.sortOrder === 'desc' ? a.createdAt - b.createdAt : b.createdAt - a.createdAt;
+        case 'mostReactions':
+          return filterOptions.sortOrder === 'desc' ? postReactions[b.id].length - postReactions[a.id].length : postReactions[a.id].length - postReactions[b.id].length;
+        case 'mostComments':
+          return filterOptions.sortOrder === 'desc' ? postComments[b.id].length - postComments[a.id].length : postComments[a.id].length - postComments[b.id].length;
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredPosts(sortedPosts);
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, [key]: value }));
+  };
+
+  const handleSortChange = (sortBy, sortOrder) => {
+    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, sortBy, sortOrder }));
   };
 
   return (
-    <div>
-      <input
-        type="search"
-        value={searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
-        placeholder="Search posts"
-      />
-      <Autocomplete
-        suggestions={suggestions}
-        onSuggestionClick={(suggestion) => handleSearch(suggestion)}
-      />
-      <select value={selectedCategory} onChange={(e) => handleCategoryChange(e.target.value)}>
-        <option value="">All categories</option>
-        {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-      </select>
-      <div>
-        {tags.map((tag) => (
-          <button key={tag} onClick={() => handleTagChange(tag)}>
-            {tag}
-          </button>
-        ))}
-      </div>
-      <button onClick={() => handleFilterChange('category', selectedCategory)}>Filter by category</button>
-      <button onClick={() => handleFilterChange('tags', selectedTags)}>Filter by tags</button>
-      <button onClick={() => handleFilterChange('searchQuery', searchQuery)}>Filter by search query</button>
-      {filteredPosts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-        </div>
-      ))}
-    </div>
+    // existing JSX code
   );
 }

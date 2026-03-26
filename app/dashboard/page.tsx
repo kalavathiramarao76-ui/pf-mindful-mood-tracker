@@ -107,140 +107,137 @@ const MemoizedSettings = React.memo(() => (
   </Suspense>
 ));
 
-const components: Component[] = [
-  { id: 'moodTracker', component: <MemoizedMoodTracker /> },
-  { id: 'recommendations', component: <MemoizedRecommendations /> },
-  { id: 'goals', component: <MemoizedGoals /> },
-  { id: 'community', component: <MemoizedCommunity /> },
-  { id: 'settings', component: <MemoizedSettings /> },
-];
-
-const initialLayout: Layout = {
-  moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-  recommendations: { x: 300, y: 0, width: 300, height: 200 },
-  goals: { x: 0, y: 200, width: 300, height: 200 },
-  community: { x: 300, y: 200, width: 300, height: 200 },
-  settings: { x: 0, y: 400, width: 300, height: 200 },
-};
-
-const initialDashboardConfig: DashboardConfig = {
-  layout: initialLayout,
-  components: {
-    moodTracker: {
-      id: 'moodTracker',
-      component: <MemoizedMoodTracker />,
-      removable: false,
-      resizable: true,
-    },
-    recommendations: {
-      id: 'recommendations',
-      component: <MemoizedRecommendations />,
-      removable: false,
-      resizable: true,
-    },
-    goals: {
-      id: 'goals',
-      component: <MemoizedGoals />,
-      removable: false,
-      resizable: true,
-    },
-    community: {
-      id: 'community',
-      component: <MemoizedCommunity />,
-      removable: false,
-      resizable: true,
-    },
-    settings: {
-      id: 'settings',
-      component: <MemoizedSettings />,
-      removable: false,
-      resizable: true,
-    },
-  },
-  breakpoints: {
-    sm: {
-      layout: {
-        moodTracker: { x: 0, y: 0, width: 100, height: 100 },
-        recommendations: { x: 100, y: 0, width: 100, height: 100 },
-        goals: { x: 0, y: 100, width: 100, height: 100 },
-        community: { x: 100, y: 100, width: 100, height: 100 },
-        settings: { x: 0, y: 200, width: 100, height: 100 },
-      },
-    },
-    md: {
-      layout: {
-        moodTracker: { x: 0, y: 0, width: 200, height: 200 },
-        recommendations: { x: 200, y: 0, width: 200, height: 200 },
-        goals: { x: 0, y: 200, width: 200, height: 200 },
-        community: { x: 200, y: 200, width: 200, height: 200 },
-        settings: { x: 0, y: 400, width: 200, height: 200 },
-      },
-    },
-    lg: {
-      layout: {
-        moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-        recommendations: { x: 300, y: 0, width: 300, height: 200 },
-        goals: { x: 0, y: 200, width: 300, height: 200 },
-        community: { x: 300, y: 200, width: 300, height: 200 },
-        settings: { x: 0, y: 400, width: 300, height: 200 },
-      },
-    },
-  },
-};
-
 const Page = () => {
-  const [dashboardConfig, setDashboardConfig] = useState(initialDashboardConfig);
-  const [dragging, setDragging] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const handleDragStart = () => {
-    setDragging(true);
-  };
+  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
+    layout: {
+      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+      recommendations: { x: 300, y: 0, width: 300, height: 200 },
+      goals: { x: 0, y: 200, width: 300, height: 200 },
+      community: { x: 300, y: 200, width: 300, height: 200 },
+      settings: { x: 0, y: 400, width: 300, height: 200 },
+    },
+    components: {
+      moodTracker: {
+        id: 'moodTracker',
+        component: <MemoizedMoodTracker />,
+        removable: false,
+        resizable: true,
+      },
+      recommendations: {
+        id: 'recommendations',
+        component: <MemoizedRecommendations />,
+        removable: false,
+        resizable: true,
+      },
+      goals: {
+        id: 'goals',
+        component: <MemoizedGoals />,
+        removable: false,
+        resizable: true,
+      },
+      community: {
+        id: 'community',
+        component: <MemoizedCommunity />,
+        removable: false,
+        resizable: true,
+      },
+      settings: {
+        id: 'settings',
+        component: <MemoizedSettings />,
+        removable: false,
+        resizable: true,
+      },
+    },
+    breakpoints: {
+      sm: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 100, height: 100 },
+          recommendations: { x: 100, y: 0, width: 100, height: 100 },
+          goals: { x: 0, y: 100, width: 100, height: 100 },
+          community: { x: 100, y: 100, width: 100, height: 100 },
+          settings: { x: 0, y: 200, width: 100, height: 100 },
+        },
+      },
+      md: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 200, height: 200 },
+          recommendations: { x: 200, y: 0, width: 200, height: 200 },
+          goals: { x: 0, y: 200, width: 200, height: 200 },
+          community: { x: 200, y: 200, width: 200, height: 200 },
+          settings: { x: 0, y: 400, width: 200, height: 200 },
+        },
+      },
+      lg: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+          recommendations: { x: 300, y: 0, width: 300, height: 200 },
+          goals: { x: 0, y: 200, width: 300, height: 200 },
+          community: { x: 300, y: 200, width: 300, height: 200 },
+          settings: { x: 0, y: 400, width: 300, height: 200 },
+        },
+      },
+    },
+  });
 
-  const handleDragEnd = () => {
-    setDragging(false);
-  };
-
-  const handleDragOver = (event: any) => {
-    event.preventDefault();
-  };
-
-  const handleDrop = (event: any) => {
-    event.preventDefault();
-    const componentId = event.dataTransfer.getData('componentId');
-    const x = event.clientX;
-    const y = event.clientY;
-    const component = components.find((c) => c.id === componentId);
-    if (component) {
-      const newLayout = { ...dashboardConfig.layout };
-      newLayout[componentId] = { x, y, width: component.component.props.width, height: component.component.props.height };
-      setDashboardConfig({ ...dashboardConfig, layout: newLayout });
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setDashboardConfig((prevConfig) => {
+        const newLayout = { ...prevConfig.layout };
+        const newComponents = { ...prevConfig.components };
+        const activeComponent = newComponents[active.id];
+        const overComponent = newComponents[over.id];
+        const activeLayout = newLayout[active.id];
+        const overLayout = newLayout[over.id];
+        newLayout[active.id] = overLayout;
+        newLayout[over.id] = activeLayout;
+        newComponents[active.id].component = overComponent.component;
+        newComponents[over.id].component = activeComponent.component;
+        return { ...prevConfig, layout: newLayout, components: newComponents };
+      });
     }
   };
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <SortableContext items={components} strategy={rectSortingStrategy}>
+    <DndContext onDragEnd={handleDragEnd}>
+      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
         <DashboardLayout>
-          {components.map((component) => (
+          {Object.keys(dashboardConfig.components).map((componentId) => (
             <div
-              key={component.id}
+              key={componentId}
               style={{
                 position: 'absolute',
-                left: dashboardConfig.layout[component.id].x,
-                top: dashboardConfig.layout[component.id].y,
-                width: dashboardConfig.layout[component.id].width,
-                height: dashboardConfig.layout[component.id].height,
+                top: dashboardConfig.layout[componentId].y,
+                left: dashboardConfig.layout[componentId].x,
+                width: dashboardConfig.layout[componentId].width,
+                height: dashboardConfig.layout[componentId].height,
               }}
-              draggable
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              data-component-id={component.id}
             >
-              {component.component}
+              {dashboardConfig.components[componentId].component}
             </div>
           ))}
         </DashboardLayout>
       </SortableContext>
+      <DragOverlay>
+        {({ dragging }) =>
+          dragging ? (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 1000,
+              }}
+            />
+          ) : null
+        }
+      </DragOverlay>
     </DndContext>
   );
 };
