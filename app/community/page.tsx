@@ -71,86 +71,47 @@ export default function CommunityPage() {
       setLoading(false);
     };
     fetchPosts();
-  }, [pageNumber]);
+  }, [pathname, pageNumber]);
+
+  const handleScroll = () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight && hasMorePosts) {
+      setIsFetching(true);
+      setPageNumber((prevPageNumber) => prevPageNumber + 1);
+      const fetchMorePosts = async () => {
+        const data = await getCommunityPosts(pageNumber + 1);
+        if (data.length < 10) {
+          setHasMorePosts(false);
+        }
+        setPosts((prevPosts) => [...prevPosts, ...data]);
+        setFilteredPosts((prevPosts) => [...prevPosts, ...data]);
+        const reactions = {};
+        const comments = {};
+        for (const post of data) {
+          reactions[post.id] = await getPostReactions(post.id);
+          comments[post.id] = await getPostComments(post.id);
+        }
+        setPostReactions((prevReactions) => ({ ...prevReactions, ...reactions }));
+        setPostComments((prevComments) => ({ ...prevComments, ...comments }));
+        setIsFetching(false);
+      };
+      fetchMorePosts();
+    }
+  };
 
   useEffect(() => {
-    const filterPosts = () => {
-      const filtered = posts.filter((post) => {
-        const categoryMatch = filterOptions.category ? post.category === filterOptions.category : true;
-        const tagsMatch = filterOptions.tags.length ? filterOptions.tags.every((tag) => post.tags.includes(tag)) : true;
-        const searchQueryMatch = filterOptions.searchQuery ? post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase()) : true;
-        return categoryMatch && tagsMatch && searchQueryMatch;
-      });
-      const sorted = filtered.sort((a, b) => {
-        if (filterOptions.sortBy === 'newest') {
-          return filterOptions.sortOrder === 'desc' ? b.createdAt - a.createdAt : a.createdAt - b.createdAt;
-        } else if (filterOptions.sortBy === 'oldest') {
-          return filterOptions.sortOrder === 'desc' ? a.createdAt - b.createdAt : b.createdAt - a.createdAt;
-        } else if (filterOptions.sortBy === 'mostReactions') {
-          return filterOptions.sortOrder === 'desc' ? postReactions[b.id].length - postReactions[a.id].length : postReactions[a.id].length - postReactions[b.id].length;
-        } else if (filterOptions.sortBy === 'mostComments') {
-          return filterOptions.sortOrder === 'desc' ? postComments[b.id].length - postComments[a.id].length : postComments[a.id].length - postComments[b.id].length;
-        }
-      });
-      setFilteredPosts(sorted);
-    };
-    filterPosts();
-  }, [posts, filterOptions]);
-
-  const handleFilterChange = (key, value) => {
-    setFilterOptions((prevOptions) => ({ ...prevOptions, [key]: value }));
-  };
-
-  const handleSortChange = (sortBy, sortOrder) => {
-    setFilterOptions((prevOptions) => ({ ...prevOptions, sortBy, sortOrder }));
-  };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMorePosts, pageNumber]);
 
   return (
     <div>
-      <h1>Community Page</h1>
-      <input
-        type="text"
-        value={filterOptions.searchQuery}
-        onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
-        placeholder="Search posts"
-      />
-      <select
-        value={filterOptions.category}
-        onChange={(e) => handleFilterChange('category', e.target.value)}
-      >
-        <option value="">All categories</option>
-        {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-      </select>
-      <select
-        value={filterOptions.sortBy}
-        onChange={(e) => handleSortChange(e.target.value, filterOptions.sortOrder)}
-      >
-        <option value="newest">Newest</option>
-        <option value="oldest">Oldest</option>
-        <option value="mostReactions">Most reactions</option>
-        <option value="mostComments">Most comments</option>
-      </select>
-      <select
-        value={filterOptions.sortOrder}
-        onChange={(e) => handleSortChange(filterOptions.sortBy, e.target.value)}
-      >
-        <option value="desc">Descending</option>
-        <option value="asc">Ascending</option>
-      </select>
-      <ul>
-        {filteredPosts.map((post) => (
-          <li key={post.id}>
-            <h2>{post.title}</h2>
-            <p>{post.content}</p>
-            <p>Reactions: {postReactions[post.id].length}</p>
-            <p>Comments: {postComments[post.id].length}</p>
-          </li>
-        ))}
-      </ul>
+      {filteredPosts.map((post) => (
+        <div key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
+        </div>
+      ))}
+      {isFetching && <p>Loading...</p>}
     </div>
   );
 }

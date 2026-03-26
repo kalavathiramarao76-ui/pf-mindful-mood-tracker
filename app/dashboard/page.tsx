@@ -109,85 +109,69 @@ export default function DashboardPage() {
             settings: { x: 0, y: 4, width: 1, height: 1 },
           },
         },
-        md: {
-          layout: {
-            moodTracker: { x: 0, y: 0, width: 1, height: 1 },
-            recommendations: { x: 1, y: 0, width: 1, height: 1 },
-            goals: { x: 0, y: 1, width: 1, height: 1 },
-            community: { x: 1, y: 1, width: 1, height: 1 },
-            settings: { x: 0, y: 2, width: 1, height: 1 },
-          },
-        },
-        lg: {
-          layout: {
-            moodTracker: { x: 0, y: 0, width: 2, height: 1 },
-            recommendations: { x: 2, y: 0, width: 1, height: 1 },
-            goals: { x: 0, y: 1, width: 1, height: 1 },
-            community: { x: 1, y: 1, width: 1, height: 1 },
-            settings: { x: 2, y: 1, width: 1, height: 1 },
-          },
-        },
       },
     };
   });
 
-  const handleResize = (id: string, width: number, height: number) => {
-    const newConfig = { ...dashboardConfig };
-    newConfig.components[id].width = width;
-    newConfig.components[id].height = height;
-    setDashboardConfig(newConfig);
-  };
-
-  const handleMove = (id: string, x: number, y: number) => {
-    const newConfig = { ...dashboardConfig };
-    newConfig.components[id].x = x;
-    newConfig.components[id].y = y;
-    setDashboardConfig(newConfig);
-  };
-
-  const handleRemove = (id: string) => {
-    const newConfig = { ...dashboardConfig };
-    delete newConfig.components[id];
-    setDashboardConfig(newConfig);
-  };
-
-  const getLayout = () => {
-    const width = window.innerWidth;
-    if (width < 768) {
-      return dashboardConfig.breakpoints.sm.layout;
-    } else if (width < 1024) {
-      return dashboardConfig.breakpoints.md.layout;
-    } else {
-      return dashboardConfig.breakpoints.lg.layout;
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setDashboardConfig((prevConfig) => {
+        const newLayout = { ...prevConfig.layout };
+        const newComponents = { ...prevConfig.components };
+        const activeComponent = newComponents[active.id];
+        const overComponent = newComponents[over.id];
+        const activeLayout = newLayout[active.id];
+        const overLayout = newLayout[over.id];
+        newLayout[active.id] = overLayout;
+        newLayout[over.id] = activeLayout;
+        return { ...prevConfig, layout: newLayout };
+      });
     }
   };
 
+  const handleAddComponent = (component: Component) => {
+    setDashboardConfig((prevConfig) => {
+      const newComponents = { ...prevConfig.components };
+      newComponents[component.id] = {
+        id: component.id,
+        component: component.component,
+        removable: true,
+        resizable: true,
+      };
+      const newLayout = { ...prevConfig.layout };
+      newLayout[component.id] = { x: 0, y: Object.keys(newLayout).length, width: 1, height: 1 };
+      return { ...prevConfig, components: newComponents, layout: newLayout };
+    });
+  };
+
+  const handleRemoveComponent = (componentId: string) => {
+    setDashboardConfig((prevConfig) => {
+      const newComponents = { ...prevConfig.components };
+      delete newComponents[componentId];
+      const newLayout = { ...prevConfig.layout };
+      delete newLayout[componentId];
+      return { ...prevConfig, components: newComponents, layout: newLayout };
+    });
+  };
+
   return (
-    <DndContext onDragEnd={handleMove}>
-      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                left: `${getLayout()[id].x * 100}%`,
-                top: `${getLayout()[id].y * 100}%`,
-                width: `${getLayout()[id].width * 100}%`,
-                height: `${getLayout()[id].height * 100}%`,
-              }}
-            >
-              {dashboardConfig.components[id].component}
-              {dashboardConfig.components[id].resizable && (
-                <button onClick={() => handleResize(id, getLayout()[id].width + 1, getLayout()[id].height + 1)}>Resize</button>
-              )}
-              {dashboardConfig.components[id].removable && (
-                <button onClick={() => handleRemove(id)}>Remove</button>
-              )}
-            </div>
-          ))}
-        </DashboardLayout>
-      </SortableContext>
+    <DndContext onDragEnd={handleDragEnd}>
+      <DashboardLayout>
+        {Object.keys(dashboardConfig.components).map((componentId) => (
+          <SortableContext key={componentId} items={[componentId]} strategy={rectSortingStrategy}>
+            {dashboardConfig.components[componentId].component}
+          </SortableContext>
+        ))}
+        <button onClick={() => handleAddComponent({ id: 'newComponent', component: <div>New Component</div> })}>
+          Add Component
+        </button>
+        {Object.keys(dashboardConfig.components).map((componentId) => (
+          <button key={componentId} onClick={() => handleRemoveComponent(componentId)}>
+            Remove {componentId}
+          </button>
+        ))}
+      </DashboardLayout>
     </DndContext>
   );
 }
