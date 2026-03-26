@@ -74,13 +74,9 @@ export default function CommunityPage() {
   }, [pathname, pageNumber]);
 
   const handleScroll = () => {
-    if (hasMorePosts && !loading) {
-      const scrollPosition = window.scrollY + window.innerHeight;
-      const documentHeight = document.body.offsetHeight;
-      if (scrollPosition >= documentHeight * 0.8) {
-        setIsFetching(true);
-        setPageNumber((prevPageNumber) => prevPageNumber + 1);
-      }
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight && hasMorePosts && !loading) {
+      setIsFetching(true);
+      setPageNumber((prevPageNumber) => prevPageNumber + 1);
     }
   };
 
@@ -115,8 +111,11 @@ export default function CommunityPage() {
   return (
     <div>
       {loading && <div>Loading...</div>}
-      {filteredPosts.map((post) => (
-        <div key={post.id}>{post.content}</div>
+      {posts.map((post) => (
+        <div key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
+        </div>
       ))}
       {isFetching && <div>Loading more posts...</div>}
     </div>

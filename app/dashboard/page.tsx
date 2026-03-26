@@ -8,6 +8,13 @@ import Community from '../components/community';
 import Settings from '../components/settings';
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+import { lazy, Suspense } from 'react';
+
+const LazyMoodTracker = lazy(() => import('../components/mood-tracker'));
+const LazyRecommendations = lazy(() => import('../components/recommendations'));
+const LazyGoals = lazy(() => import('../components/goals'));
+const LazyCommunity = lazy(() => import('../components/community'));
+const LazySettings = lazy(() => import('../components/settings'));
 
 interface Component {
   id: string;
@@ -74,6 +81,12 @@ const tutorialSteps: TutorialStep[] = [
   },
 ];
 
+const MemoizedMoodTracker = React.memo(LazyMoodTracker);
+const MemoizedRecommendations = React.memo(LazyRecommendations);
+const MemoizedGoals = React.memo(LazyGoals);
+const MemoizedCommunity = React.memo(LazyCommunity);
+const MemoizedSettings = React.memo(LazySettings);
+
 export default function DashboardPage() {
   const [moodData, setMoodData] = useState(() => {
     const storedMoodData = localStorage.getItem('moodData');
@@ -95,78 +108,23 @@ export default function DashboardPage() {
     const storedSettingsData = localStorage.getItem('settingsData');
     return storedSettingsData ? JSON.parse(storedSettingsData) : {};
   });
-  const [dashboardConfig, setDashboardConfig] = useState(() => {
-    const storedDashboardConfig = localStorage.getItem('dashboardConfig');
-    return storedDashboardConfig ? JSON.parse(storedDashboardConfig) : {
-      layout: {},
-      components: {},
-      breakpoints: {},
-    };
-  });
-  const [tutorialStep, setTutorialStep] = useState(() => {
-    const storedTutorialStep = localStorage.getItem('tutorialStep');
-    return storedTutorialStep ? parseInt(storedTutorialStep) : 0;
-  });
-  const [showTutorial, setShowTutorial] = useState(() => {
-    const storedShowTutorial = localStorage.getItem('showTutorial');
-    return storedShowTutorial === 'true';
-  });
-
-  const handleNextTutorialStep = () => {
-    if (tutorialStep < tutorialSteps.length - 1) {
-      setTutorialStep(tutorialStep + 1);
-      localStorage.setItem('tutorialStep', (tutorialStep + 1).toString());
-    } else {
-      setTutorialStep(0);
-      setShowTutorial(false);
-      localStorage.setItem('showTutorial', 'false');
-    }
-  };
-
-  const handleSkipTutorial = () => {
-    setShowTutorial(false);
-    localStorage.setItem('showTutorial', 'false');
-  };
 
   return (
     <DashboardLayout>
-      {showTutorial && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              padding: '20px',
-              borderRadius: '10px',
-              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
-            }}
-          >
-            <h2>{tutorialSteps[tutorialStep].title}</h2>
-            <p>{tutorialSteps[tutorialStep].description}</p>
-            <button onClick={handleNextTutorialStep}>Next</button>
-            <button onClick={handleSkipTutorial}>Skip</button>
-          </div>
-        </div>
-      )}
-      <DndContext collisionDetection={closestCenter}>
-        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          <MoodTracker />
-          <Recommendations />
-          <Goals />
-          <Community />
-          <Settings />
+      <Suspense fallback={<div>Loading...</div>}>
+        <MemoizedMoodTracker />
+        <MemoizedRecommendations />
+        <MemoizedGoals />
+        <MemoizedCommunity />
+        <MemoizedSettings />
+      </Suspense>
+      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+        <SortableContext items={items} strategy={rectSortingStrategy}>
+          {items.map((item) => (
+            <div key={item.id}>{item.component}</div>
+          ))}
         </SortableContext>
+        <DragOverlay>{activeId ? <div>{activeId}</div> : null}</DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
