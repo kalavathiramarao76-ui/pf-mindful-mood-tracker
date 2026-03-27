@@ -113,11 +113,11 @@ const Page = () => {
 
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
     layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 300 },
-      recommendations: { x: 300, y: 0, width: 300, height: 300 },
-      goals: { x: 0, y: 300, width: 300, height: 300 },
-      community: { x: 300, y: 300, width: 300, height: 300 },
-      settings: { x: 600, y: 0, width: 300, height: 300 },
+      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+      recommendations: { x: 300, y: 0, width: 300, height: 200 },
+      goals: { x: 0, y: 200, width: 300, height: 200 },
+      community: { x: 300, y: 200, width: 300, height: 200 },
+      settings: { x: 0, y: 400, width: 300, height: 200 },
     },
     components: {
       moodTracker: {
@@ -154,56 +154,68 @@ const Page = () => {
     breakpoints: {
       sm: {
         layout: {
-          moodTracker: { x: 0, y: 0, width: 300, height: 300 },
-          recommendations: { x: 0, y: 300, width: 300, height: 300 },
-          goals: { x: 0, y: 600, width: 300, height: 300 },
-          community: { x: 0, y: 900, width: 300, height: 300 },
-          settings: { x: 0, y: 1200, width: 300, height: 300 },
+          moodTracker: { x: 0, y: 0, width: 200, height: 150 },
+          recommendations: { x: 200, y: 0, width: 200, height: 150 },
+          goals: { x: 0, y: 150, width: 200, height: 150 },
+          community: { x: 200, y: 150, width: 200, height: 150 },
+          settings: { x: 0, y: 300, width: 200, height: 150 },
+        },
+      },
+      md: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 250, height: 200 },
+          recommendations: { x: 250, y: 0, width: 250, height: 200 },
+          goals: { x: 0, y: 200, width: 250, height: 200 },
+          community: { x: 250, y: 200, width: 250, height: 200 },
+          settings: { x: 0, y: 400, width: 250, height: 200 },
+        },
+      },
+      lg: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 300, height: 250 },
+          recommendations: { x: 300, y: 0, width: 300, height: 250 },
+          goals: { x: 0, y: 250, width: 300, height: 250 },
+          community: { x: 300, y: 250, width: 300, height: 250 },
+          settings: { x: 0, y: 500, width: 300, height: 250 },
         },
       },
     },
   });
 
   const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      setDashboardConfig((prevConfig) => {
-        const newConfig = { ...prevConfig };
-        const activeComponent = newConfig.components[active.id];
-        const overComponent = newConfig.components[over.id];
-        const newLayout = { ...newConfig.layout };
-        newLayout[active.id] = newLayout[over.id];
-        newLayout[over.id] = active.rect;
-        newConfig.layout = newLayout;
-        return newConfig;
-      });
-    }
+    const { id, x, y } = event;
+    setDashboardConfig((prevConfig) => ({
+      ...prevConfig,
+      layout: {
+        ...prevConfig.layout,
+        [id]: { x, y, width: prevConfig.layout[id].width, height: prevConfig.layout[id].height },
+      },
+    }));
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <DragOverlay>
-        {dashboardConfig.components[Object.keys(dashboardConfig.components).find((key) => dashboardConfig.components[key].component === dashboardConfig.components[Object.keys(dashboardConfig.components).find((key) => dashboardConfig.components[key].component === dashboardConfig.components[key].component)].component)]?.component}
-      </DragOverlay>
-      <DashboardLayout>
+    <DashboardLayout>
+      <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((key) => (
+          {Object.keys(dashboardConfig.layout).map((id) => (
             <div
-              key={key}
+              key={id}
               style={{
                 position: 'absolute',
-                top: dashboardConfig.layout[key].y,
-                left: dashboardConfig.layout[key].x,
-                width: dashboardConfig.layout[key].width,
-                height: dashboardConfig.layout[key].height,
+                top: dashboardConfig.layout[id].y,
+                left: dashboardConfig.layout[id].x,
+                width: dashboardConfig.layout[id].width,
+                height: dashboardConfig.layout[id].height,
+                border: '1px solid #ccc',
+                padding: '10px',
               }}
             >
-              {dashboardConfig.components[key].component}
+              {dashboardConfig.components[id].component}
             </div>
           ))}
         </SortableContext>
-      </DashboardLayout>
-    </DndContext>
+      </DndContext>
+    </DashboardLayout>
   );
 };
 
