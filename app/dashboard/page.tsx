@@ -131,42 +131,107 @@ const DashboardPage = () => {
   const pathname = usePathname();
 
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
-    layout: {},
-    components: {},
-    breakpoints: {},
+    layout: {
+      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+      recommendations: { x: 300, y: 0, width: 300, height: 200 },
+      goals: { x: 0, y: 200, width: 300, height: 200 },
+      community: { x: 300, y: 200, width: 300, height: 200 },
+      settings: { x: 0, y: 400, width: 300, height: 200 },
+    },
+    components: {
+      moodTracker: {
+        id: 'moodTracker',
+        component: <MemoizedMoodTracker />,
+        removable: false,
+        resizable: true,
+      },
+      recommendations: {
+        id: 'recommendations',
+        component: <MemoizedRecommendations />,
+        removable: false,
+        resizable: true,
+      },
+      goals: {
+        id: 'goals',
+        component: <MemoizedGoals />,
+        removable: false,
+        resizable: true,
+      },
+      community: {
+        id: 'community',
+        component: <MemoizedCommunity />,
+        removable: false,
+        resizable: true,
+      },
+      settings: {
+        id: 'settings',
+        component: <MemoizedSettings />,
+        removable: false,
+        resizable: true,
+      },
+    },
+    breakpoints: {
+      small: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 200, height: 150 },
+          recommendations: { x: 200, y: 0, width: 200, height: 150 },
+          goals: { x: 0, y: 150, width: 200, height: 150 },
+          community: { x: 200, y: 150, width: 200, height: 150 },
+          settings: { x: 0, y: 300, width: 200, height: 150 },
+        },
+      },
+      medium: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 250, height: 200 },
+          recommendations: { x: 250, y: 0, width: 250, height: 200 },
+          goals: { x: 0, y: 200, width: 250, height: 200 },
+          community: { x: 250, y: 200, width: 250, height: 200 },
+          settings: { x: 0, y: 400, width: 250, height: 200 },
+        },
+      },
+      large: {
+        layout: {
+          moodTracker: { x: 0, y: 0, width: 300, height: 250 },
+          recommendations: { x: 300, y: 0, width: 300, height: 250 },
+          goals: { x: 0, y: 250, width: 300, height: 250 },
+          community: { x: 300, y: 250, width: 300, height: 250 },
+          settings: { x: 0, y: 500, width: 300, height: 250 },
+        },
+      },
+    },
   });
 
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const handleTutorialStep = (step: number) => {
-    setCurrentStep(step);
-  };
-
-  const handleDashboardConfigChange = (newConfig: DashboardConfig) => {
-    setDashboardConfig(newConfig);
+  const handleDragEnd = (event: any) => {
+    const { id, x, y } = event;
+    setDashboardConfig((prevConfig) => ({
+      ...prevConfig,
+      layout: {
+        ...prevConfig.layout,
+        [id]: { x, y, width: prevConfig.layout[id].width, height: prevConfig.layout[id].height },
+      },
+    }));
   };
 
   return (
     <DashboardLayout>
-      <DndContext collisionDetection={closestCenter}>
+      <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((componentId) => {
-            const component = dashboardConfig.components[componentId];
-            switch (component.id) {
-              case 'moodTracker':
-                return <MemoizedMoodTracker key={componentId} />;
-              case 'recommendations':
-                return <MemoizedRecommendations key={componentId} />;
-              case 'goals':
-                return <MemoizedGoals key={componentId} />;
-              case 'community':
-                return <MemoizedCommunity key={componentId} />;
-              case 'settings':
-                return <MemoizedSettings key={componentId} />;
-              default:
-                return null;
-            }
-          })}
+          {Object.keys(dashboardConfig.components).map((id) => (
+            <div
+              key={id}
+              style={{
+                position: 'absolute',
+                top: dashboardConfig.layout[id].y,
+                left: dashboardConfig.layout[id].x,
+                width: dashboardConfig.layout[id].width,
+                height: dashboardConfig.layout[id].height,
+                border: '1px solid #ccc',
+                padding: '10px',
+              }}
+            >
+              {dashboardConfig.components[id].component}
+            </div>
+          ))}
         </SortableContext>
       </DndContext>
     </DashboardLayout>
