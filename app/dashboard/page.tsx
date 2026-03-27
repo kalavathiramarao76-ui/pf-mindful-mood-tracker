@@ -89,6 +89,7 @@ const MemoizedMoodTracker = React.memo(() => (
   // Only re-render if props change
   return prevProps === nextProps;
 });
+
 const MemoizedRecommendations = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazyRecommendations />
@@ -97,6 +98,7 @@ const MemoizedRecommendations = React.memo(() => (
   // Only re-render if props change
   return prevProps === nextProps;
 });
+
 const MemoizedGoals = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazyGoals />
@@ -105,6 +107,7 @@ const MemoizedGoals = React.memo(() => (
   // Only re-render if props change
   return prevProps === nextProps;
 });
+
 const MemoizedCommunity = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazyCommunity />
@@ -113,6 +116,7 @@ const MemoizedCommunity = React.memo(() => (
   // Only re-render if props change
   return prevProps === nextProps;
 });
+
 const MemoizedSettings = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazySettings />
@@ -122,72 +126,21 @@ const MemoizedSettings = React.memo(() => (
   return prevProps === nextProps;
 });
 
-const componentsMap = {
-  moodTracker: <MemoizedMoodTracker />,
-  recommendations: <MemoizedRecommendations />,
-  goals: <MemoizedGoals />,
-  community: <MemoizedCommunity />,
-  settings: <MemoizedSettings />,
-};
-
 const DashboardPage = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
-    layout: {},
-    components: {},
-    breakpoints: {},
-  });
-
-  const [components, setComponents] = useState<Component[]>([]);
-
-  useEffect(() => {
-    const initialComponents = Object.keys(componentsMap).map((key) => ({
-      id: key,
-      component: componentsMap[key],
-    }));
-    setComponents(initialComponents);
-  }, []);
-
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      setComponents((components) => {
-        const newComponents = [...components];
-        const [removed] = newComponents.splice(newComponents.findIndex((component) => component.id === active.id), 1);
-        newComponents.splice(newComponents.findIndex((component) => component.id === over.id), 0, removed);
-        return newComponents;
-      });
-    }
-  };
-
-  const handleResize = (componentId: string, newDimensions: { width: number; height: number }) => {
-    setComponents((components) =>
-      components.map((component) => {
-        if (component.id === componentId) {
-          return { ...component, width: newDimensions.width, height: newDimensions.height };
-        }
-        return component;
-      })
-    );
-  };
-
   return (
     <DashboardLayout>
-      <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={components} strategy={rectSortingStrategy}>
-          {components.map((component, index) => (
-            <div key={component.id} style={{ width: component.component.props.width, height: component.component.props.height }}>
-              {component.component}
-            </div>
-          ))}
+      <DndContext collisionDetection={closestCenter}>
+        <SortableContext items={[]} strategy={rectSortingStrategy}>
+          <MemoizedMoodTracker />
+          <MemoizedRecommendations />
+          <MemoizedGoals />
+          <MemoizedCommunity />
+          <MemoizedSettings />
         </SortableContext>
-        <DragOverlay>
-          {components.map((component) => (
-            <div key={component.id}>{component.component}</div>
-          ))}
-        </DragOverlay>
+        <DragOverlay />
       </DndContext>
     </DashboardLayout>
   );
