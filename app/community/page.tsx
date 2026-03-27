@@ -84,24 +84,23 @@ export default function CommunityPage() {
       setLoading(false);
       setIsFetching(false);
     };
+
     if (isFetching) {
       fetchPosts();
     }
-  }, [isFetching, pageNumber]);
+  }, [isFetching, pageNumber, loading]);
 
   return (
     <div>
-      {filteredPosts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-        </div>
+      {posts.map((post) => (
+        <div key={post.id}>{post.content}</div>
       ))}
-      {loading && (
-        <div>Loading...</div>
-      )}
       {isFetching && (
-        <div>Loading more posts...</div>
+        <div className="flex justify-center mb-4">
+          <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-gray-200" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        </div>
       )}
     </div>
   );

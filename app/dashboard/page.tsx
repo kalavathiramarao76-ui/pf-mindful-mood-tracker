@@ -1,11 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import DashboardLayout from '../layout/dashboard-layout';
-import MoodTracker from '../components/mood-tracker';
-import Recommendations from '../components/recommendations';
-import Goals from '../components/goals';
-import Community from '../components/community';
-import Settings from '../components/settings';
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { lazy, Suspense } from 'react';
@@ -86,7 +81,6 @@ const MemoizedMoodTracker = React.memo(() => (
     <LazyMoodTracker />
   </Suspense>
 ), (prevProps, nextProps) => {
-  // Only re-render if props change
   return prevProps === nextProps;
 });
 
@@ -95,7 +89,6 @@ const MemoizedRecommendations = React.memo(() => (
     <LazyRecommendations />
   </Suspense>
 ), (prevProps, nextProps) => {
-  // Only re-render if props change
   return prevProps === nextProps;
 });
 
@@ -104,7 +97,6 @@ const MemoizedGoals = React.memo(() => (
     <LazyGoals />
   </Suspense>
 ), (prevProps, nextProps) => {
-  // Only re-render if props change
   return prevProps === nextProps;
 });
 
@@ -113,7 +105,6 @@ const MemoizedCommunity = React.memo(() => (
     <LazyCommunity />
   </Suspense>
 ), (prevProps, nextProps) => {
-  // Only re-render if props change
   return prevProps === nextProps;
 });
 
@@ -122,7 +113,6 @@ const MemoizedSettings = React.memo(() => (
     <LazySettings />
   </Suspense>
 ), (prevProps, nextProps) => {
-  // Only re-render if props change
   return prevProps === nextProps;
 });
 
@@ -136,80 +126,49 @@ const DashboardPage = () => {
     breakpoints: {},
   });
 
-  const [components, setComponents] = useState<Component[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
 
-  useEffect(() => {
-    const fetchDashboardConfig = async () => {
-      // Fetch dashboard config from API or storage
-      const config = await fetch('/api/dashboard-config');
-      const data = await config.json();
-      setDashboardConfig(data);
-    };
-
-    fetchDashboardConfig();
-  }, []);
-
-  useEffect(() => {
-    const fetchComponents = async () => {
-      // Fetch components from API or storage
-      const components = await fetch('/api/components');
-      const data = await components.json();
-      setComponents(data);
-    };
-
-    fetchComponents();
-  }, []);
-
-  const handleDragEnd = (event: any) => {
-    // Handle drag end event
+  const handleTutorialStep = (step: number) => {
+    setCurrentStep(step);
   };
 
-  const handleDragStart = (event: any) => {
-    // Handle drag start event
+  const handleComponentDragEnd = (event: any) => {
+    // Handle component drag end event
   };
 
-  const handleDragOver = (event: any) => {
-    // Handle drag over event
-  };
-
-  const handleDrop = (event: any) => {
-    // Handle drop event
-  };
-
-  const renderComponents = () => {
-    return components.map((component) => {
-      switch (component.id) {
-        case 'moodTracker':
-          return <MemoizedMoodTracker key={component.id} />;
-        case 'recommendations':
-          return <MemoizedRecommendations key={component.id} />;
-        case 'goals':
-          return <MemoizedGoals key={component.id} />;
-        case 'community':
-          return <MemoizedCommunity key={component.id} />;
-        case 'settings':
-          return <MemoizedSettings key={component.id} />;
-        default:
-          return null;
-      }
-    });
+  const handleComponentResize = (event: any) => {
+    // Handle component resize event
   };
 
   return (
     <DashboardLayout>
-      <DndContext
-        onDragEnd={handleDragEnd}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      >
-        <SortableContext items={components} strategy={rectSortingStrategy}>
-          {renderComponents()}
+      <DndContext onDragEnd={handleComponentDragEnd}>
+        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
+          {Object.keys(dashboardConfig.components).map((componentId: string) => {
+            const component = dashboardConfig.components[componentId];
+            return (
+              <div key={componentId} style={{ position: 'absolute', top: component.y, left: component.x, width: component.width, height: component.height }}>
+                {component.component}
+              </div>
+            );
+          })}
         </SortableContext>
         <DragOverlay>
-          {renderComponents()}
+          {Object.keys(dashboardConfig.components).map((componentId: string) => {
+            const component = dashboardConfig.components[componentId];
+            return (
+              <div key={componentId} style={{ position: 'absolute', top: component.y, left: component.x, width: component.width, height: component.height }}>
+                {component.component}
+              </div>
+            );
+          })}
         </DragOverlay>
       </DndContext>
+      <MemoizedMoodTracker />
+      <MemoizedRecommendations />
+      <MemoizedGoals />
+      <MemoizedCommunity />
+      <MemoizedSettings />
     </DashboardLayout>
   );
 };
