@@ -122,6 +122,14 @@ const MemoizedSettings = React.memo(() => (
   return prevProps === nextProps;
 });
 
+const componentsMap = {
+  moodTracker: <MemoizedMoodTracker />,
+  recommendations: <MemoizedRecommendations />,
+  goals: <MemoizedGoals />,
+  community: <MemoizedCommunity />,
+  settings: <MemoizedSettings />,
+};
+
 const DashboardPage = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -135,81 +143,51 @@ const DashboardPage = () => {
   const [components, setComponents] = useState<Component[]>([]);
 
   useEffect(() => {
-    // Initialize dashboard config and components
-    const initialConfig: DashboardConfig = {
-      layout: {
-        moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-        recommendations: { x: 300, y: 0, width: 300, height: 200 },
-        goals: { x: 0, y: 200, width: 300, height: 200 },
-        community: { x: 300, y: 200, width: 300, height: 200 },
-        settings: { x: 0, y: 400, width: 300, height: 200 },
-      },
-      components: {
-        moodTracker: {
-          id: 'moodTracker',
-          component: <MemoizedMoodTracker />,
-          removable: false,
-          resizable: true,
-        },
-        recommendations: {
-          id: 'recommendations',
-          component: <MemoizedRecommendations />,
-          removable: false,
-          resizable: true,
-        },
-        goals: {
-          id: 'goals',
-          component: <MemoizedGoals />,
-          removable: false,
-          resizable: true,
-        },
-        community: {
-          id: 'community',
-          component: <MemoizedCommunity />,
-          removable: false,
-          resizable: true,
-        },
-        settings: {
-          id: 'settings',
-          component: <MemoizedSettings />,
-          removable: false,
-          resizable: true,
-        },
-      },
-      breakpoints: {},
-    };
-
-    setDashboardConfig(initialConfig);
-
-    const initialComponents: Component[] = [
-      { id: 'moodTracker', component: <MemoizedMoodTracker /> },
-      { id: 'recommendations', component: <MemoizedRecommendations /> },
-      { id: 'goals', component: <MemoizedGoals /> },
-      { id: 'community', component: <MemoizedCommunity /> },
-      { id: 'settings', component: <MemoizedSettings /> },
-    ];
-
+    const initialComponents = Object.keys(componentsMap).map((key) => ({
+      id: key,
+      component: componentsMap[key],
+    }));
     setComponents(initialComponents);
   }, []);
 
   const handleDragEnd = (event: any) => {
-    // Update dashboard config and components on drag end
-    const { id, x, y } = event;
-    const updatedConfig = { ...dashboardConfig };
-    updatedConfig.layout[id] = { x, y, width: 300, height: 200 };
-    setDashboardConfig(updatedConfig);
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setComponents((components) => {
+        const newComponents = [...components];
+        const [removed] = newComponents.splice(newComponents.findIndex((component) => component.id === active.id), 1);
+        newComponents.splice(newComponents.findIndex((component) => component.id === over.id), 0, removed);
+        return newComponents;
+      });
+    }
+  };
+
+  const handleResize = (componentId: string, newDimensions: { width: number; height: number }) => {
+    setComponents((components) =>
+      components.map((component) => {
+        if (component.id === componentId) {
+          return { ...component, width: newDimensions.width, height: newDimensions.height };
+        }
+        return component;
+      })
+    );
   };
 
   return (
     <DashboardLayout>
       <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={components} strategy={rectSortingStrategy}>
-          {components.map((component) => (
-            <div key={component.id} style={{ position: 'absolute', left: dashboardConfig.layout[component.id].x, top: dashboardConfig.layout[component.id].y }}>
+          {components.map((component, index) => (
+            <div key={component.id} style={{ width: component.component.props.width, height: component.component.props.height }}>
               {component.component}
             </div>
           ))}
         </SortableContext>
+        <DragOverlay>
+          {components.map((component) => (
+            <div key={component.id}>{component.component}</div>
+          ))}
+        </DragOverlay>
       </DndContext>
     </DashboardLayout>
   );

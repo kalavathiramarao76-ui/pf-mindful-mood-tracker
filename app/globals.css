@@ -48,6 +48,10 @@
   button {
     @apply rounded-lg;
   }
+
+  button[aria-label] {
+    font-size: 1rem;
+  }
 }
 
 @layer components {
@@ -63,8 +67,18 @@
     @apply bg-blue-500 hover:bg-blue-700 text-white;
   }
 
+  .btn-primary:focus {
+    outline: 2px solid #3498db;
+    box-shadow: 0 0 0 2px #3498db;
+  }
+
   .btn-secondary {
     @apply bg-gray-300 hover:bg-gray-400 text-gray-900;
+  }
+
+  .btn-secondary:focus {
+    outline: 2px solid #ccc;
+    box-shadow: 0 0 0 2px #ccc;
   }
 }
 

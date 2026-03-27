@@ -78,31 +78,35 @@ export default function CommunityPage() {
         reactionsMap[id] = reactions[index];
         commentsMap[id] = comments[index];
       });
-      setPostReactions((prevReactions) => ({ ...prevReactions, ...reactionsMap }));
-      setPostComments((prevComments) => ({ ...prevComments, ...commentsMap }));
-      const uniqueCategories = [...new Set(data.map((post) => post.category))];
-      setCategories((prevCategories) => [...new Set([...prevCategories, ...uniqueCategories])]);
+      setPostReactions(reactionsMap);
+      setPostComments(commentsMap);
+      setPageNumber(pageNumber + 1);
       setLoading(false);
-    };
-    fetchPosts();
-  }, [pageNumber]);
-
-  useEffect(() => {
-    if (isFetching) {
-      setPageNumber((prevPageNumber) => prevPageNumber + 1);
       setIsFetching(false);
+    };
+    if (isFetching) {
+      fetchPosts();
     }
-  }, [isFetching]);
+  }, [isFetching, pageNumber, loading]);
 
   return (
     <div>
       {filteredPosts.map((post) => (
         <div key={post.id}>
-          {/* post content */}
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
         </div>
       ))}
-      {loading && <div>Loading...</div>}
-      {hasMorePosts && <div>Loading more posts...</div>}
+      {loading && (
+        <div>
+          <p>Loading...</p>
+        </div>
+      )}
+      {!hasMorePosts && (
+        <div>
+          <p>No more posts to load.</p>
+        </div>
+      )}
     </div>
   );
 }
