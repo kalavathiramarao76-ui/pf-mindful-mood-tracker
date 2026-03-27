@@ -107,116 +107,69 @@ const MemoizedSettings = React.memo(() => (
   </Suspense>
 ));
 
-const Page = () => {
+const App = () => {
   const router = useRouter();
   const pathname = usePathname();
 
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
-    layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-      recommendations: { x: 300, y: 0, width: 300, height: 200 },
-      goals: { x: 0, y: 200, width: 300, height: 200 },
-      community: { x: 300, y: 200, width: 300, height: 200 },
-      settings: { x: 0, y: 400, width: 300, height: 200 },
-    },
-    components: {
-      moodTracker: {
-        id: 'moodTracker',
-        component: <MemoizedMoodTracker />,
-        removable: false,
-        resizable: true,
-      },
-      recommendations: {
-        id: 'recommendations',
-        component: <MemoizedRecommendations />,
-        removable: false,
-        resizable: true,
-      },
-      goals: {
-        id: 'goals',
-        component: <MemoizedGoals />,
-        removable: false,
-        resizable: true,
-      },
-      community: {
-        id: 'community',
-        component: <MemoizedCommunity />,
-        removable: false,
-        resizable: true,
-      },
-      settings: {
-        id: 'settings',
-        component: <MemoizedSettings />,
-        removable: false,
-        resizable: true,
-      },
-    },
-    breakpoints: {
-      sm: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 200, height: 150 },
-          recommendations: { x: 200, y: 0, width: 200, height: 150 },
-          goals: { x: 0, y: 150, width: 200, height: 150 },
-          community: { x: 200, y: 150, width: 200, height: 150 },
-          settings: { x: 0, y: 300, width: 200, height: 150 },
-        },
-      },
-      md: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 250, height: 200 },
-          recommendations: { x: 250, y: 0, width: 250, height: 200 },
-          goals: { x: 0, y: 200, width: 250, height: 200 },
-          community: { x: 250, y: 200, width: 250, height: 200 },
-          settings: { x: 0, y: 400, width: 250, height: 200 },
-        },
-      },
-      lg: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 300, height: 250 },
-          recommendations: { x: 300, y: 0, width: 300, height: 250 },
-          goals: { x: 0, y: 250, width: 300, height: 250 },
-          community: { x: 300, y: 250, width: 300, height: 250 },
-          settings: { x: 0, y: 500, width: 300, height: 250 },
-        },
-      },
-    },
+    layout: {},
+    components: {},
+    breakpoints: {},
   });
 
-  const handleDragEnd = (event: any) => {
-    const { id, x, y } = event;
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      layout: {
-        ...prevConfig.layout,
-        [id]: { x, y, width: prevConfig.layout[id].width, height: prevConfig.layout[id].height },
-      },
-    }));
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const handleTutorialStep = (step: number) => {
+    setCurrentStep(step);
   };
 
   return (
     <DashboardLayout>
       <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.layout).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                top: dashboardConfig.layout[id].y,
-                left: dashboardConfig.layout[id].x,
-                width: dashboardConfig.layout[id].width,
-                height: dashboardConfig.layout[id].height,
-                border: '1px solid #ccc',
-                padding: '10px',
-              }}
-            >
+          {Object.keys(dashboardConfig.components).map((id) => (
+            <div key={id}>
               {dashboardConfig.components[id].component}
             </div>
           ))}
         </SortableContext>
+        <DragOverlay>
+          {dashboardConfig.components[Object.keys(dashboardConfig.components)[0]].component}
+        </DragOverlay>
       </DndContext>
+      <Suspense fallback={<div>Loading...</div>}>
+        {tutorialSteps.map((step, index) => (
+          <div key={index}>
+            {index === currentStep && (
+              <div>
+                <h2>{step.title}</h2>
+                <p>{step.description}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </Suspense>
+      <Suspense fallback={<div>Loading...</div>}>
+        <MemoizedMoodTracker />
+        <MemoizedRecommendations />
+        <MemoizedGoals />
+        <MemoizedCommunity />
+        <MemoizedSettings />
+      </Suspense>
     </DashboardLayout>
   );
 };
 
-export default Page;
+const handleDragEnd = (event: any) => {
+  const { active, over } = event;
+  if (active.id !== over.id) {
+    const newComponents = { ...dashboardConfig.components };
+    const activeComponent = newComponents[active.id];
+    const overComponent = newComponents[over.id];
+    newComponents[active.id] = overComponent;
+    newComponents[over.id] = activeComponent;
+    setDashboardConfig({ ...dashboardConfig, components: newComponents });
+  }
+};
+
+export default App;

@@ -69,102 +69,28 @@ export default function CommunityPage() {
       setPostComments((prevComments) => ({ ...prevComments, ...commentsMap }));
       const uniqueCategories = [...new Set(data.map((post) => post.category))];
       setCategories((prevCategories) => [...new Set([...prevCategories, ...uniqueCategories])]);
-      applyFilter();
+      setLoading(false);
     };
     fetchPosts();
-  }, [pageNumber, filterOptions]);
+  }, [pageNumber]);
 
-  const applyFilter = () => {
-    const filteredData = posts.filter((post) => {
-      const categoryMatch = filterOptions.category === '' || post.category === filterOptions.category;
-      const tagsMatch = filterOptions.tags.length === 0 || filterOptions.tags.some((tag) => post.tags.includes(tag));
-      const searchQueryMatch = post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase());
-      return categoryMatch && tagsMatch && searchQueryMatch;
-    });
-    const sortedData = filteredData.sort((a, b) => {
-      if (filterOptions.sortBy === 'newest') {
-        return b.createdAt - a.createdAt;
-      } else if (filterOptions.sortBy === 'oldest') {
-        return a.createdAt - b.createdAt;
-      } else if (filterOptions.sortBy === 'mostReactions') {
-        return b.reactions.length - a.reactions.length;
-      } else if (filterOptions.sortBy === 'mostComments') {
-        return b.comments.length - a.comments.length;
-      }
-    });
-    setFilteredPosts(sortedData);
+  const handleScroll = () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight && hasMorePosts && !loading) {
+      setIsFetching(true);
+      setPageNumber((prevPageNumber) => prevPageNumber + 1);
+      setIsFetching(false);
+    }
   };
 
-  const handleSearchQueryChange = (e) => {
-    setSearchQuery(e.target.value);
-    setFilterOptions((prevOptions) => ({ ...prevOptions, searchQuery: e.target.value }));
-  };
-
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
-    setFilterOptions((prevOptions) => ({ ...prevOptions, category: e.target.value }));
-  };
-
-  const handleTagsChange = (e) => {
-    const selectedTags = e.target.selectedOptions;
-    const tags = Array.from(selectedTags).map((option) => option.value);
-    setSelectedTags(tags);
-    setFilterOptions((prevOptions) => ({ ...prevOptions, tags }));
-  };
-
-  const handleSortByChange = (e) => {
-    setSortOrder(e.target.value);
-    setFilterOptions((prevOptions) => ({ ...prevOptions, sortBy: e.target.value }));
-  };
-
-  const handleSortOrderChange = (e) => {
-    setFilterOptions((prevOptions) => ({ ...prevOptions, sortOrder: e.target.value }));
-  };
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMorePosts, loading]);
 
   return (
     <div>
-      <h1>Community Page</h1>
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={handleSearchQueryChange}
-        placeholder="Search"
-      />
-      <select value={selectedCategory} onChange={handleCategoryChange}>
-        <option value="">All Categories</option>
-        {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-      </select>
-      <select multiple value={selectedTags} onChange={handleTagsChange}>
-        {tags.map((tag) => (
-          <option key={tag} value={tag}>
-            {tag}
-          </option>
-        ))}
-      </select>
-      <select value={sortOrder} onChange={handleSortByChange}>
-        <option value="newest">Newest</option>
-        <option value="oldest">Oldest</option>
-        <option value="mostReactions">Most Reactions</option>
-        <option value="mostComments">Most Comments</option>
-      </select>
-      <select value={filterOptions.sortOrder} onChange={handleSortOrderChange}>
-        <option value="desc">Descending</option>
-        <option value="asc">Ascending</option>
-      </select>
-      <ul>
-        {filteredPosts.map((post) => (
-          <li key={post.id}>
-            <h2>{post.title}</h2>
-            <p>{post.content}</p>
-            <p>Reactions: {post.reactions.length}</p>
-            <p>Comments: {post.comments.length}</p>
-          </li>
-        ))}
-      </ul>
+      {/* existing JSX content */}
+      {isFetching && <div>Loading...</div>}
     </div>
   );
 }
