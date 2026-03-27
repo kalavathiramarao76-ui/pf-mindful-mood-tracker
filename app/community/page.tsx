@@ -80,112 +80,29 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
+      setPageNumber(pageNumber + 1);
       setLoading(false);
+      setIsFetching(false);
     };
-    fetchPosts();
-  }, [pageNumber]);
 
-  const applyFilters = (posts) => {
-    const filteredPosts = posts.filter((post) => {
-      const categoryMatch = filterOptions.category ? post.category === filterOptions.category : true;
-      const tagsMatch = filterOptions.tags.length ? filterOptions.tags.every((tag) => post.tags.includes(tag)) : true;
-      const searchQueryMatch = filterOptions.searchQuery ? post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase()) : true;
-      return categoryMatch && tagsMatch && searchQueryMatch;
-    });
-    return filteredPosts;
-  };
-
-  const sortPosts = (posts) => {
-    const sortedPosts = posts.sort((a, b) => {
-      if (filterOptions.sortBy === 'newest') {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      } else if (filterOptions.sortBy === 'oldest') {
-        return new Date(a.createdAt) - new Date(b.createdAt);
-      } else if (filterOptions.sortBy === 'mostReactions') {
-        return b.reactions.length - a.reactions.length;
-      } else if (filterOptions.sortBy === 'mostComments') {
-        return b.comments.length - a.comments.length;
-      }
-    });
-    return sortedPosts;
-  };
-
-  useEffect(() => {
-    const filteredPosts = applyFilters(posts);
-    const sortedPosts = sortPosts(filteredPosts);
-    setFilteredPosts(sortedPosts);
-  }, [posts, filterOptions]);
-
-  const handleSearchQueryChange = (event) => {
-    const searchQuery = event.target.value;
-    setSearchQuery(searchQuery);
-    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, searchQuery }));
-  };
-
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
-    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, category }));
-  };
-
-  const handleTagChange = (tags) => {
-    setSelectedTags(tags);
-    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, tags }));
-  };
-
-  const handleSortByChange = (sortBy) => {
-    setSortOrder(sortBy);
-    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, sortBy }));
-  };
-
-  const handleSortOrderChange = (sortOrder) => {
-    setSortOrder(sortOrder);
-    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, sortOrder }));
-  };
+    if (isFetching) {
+      fetchPosts();
+    }
+  }, [isFetching, pageNumber, loading]);
 
   return (
     <div>
-      <h1>Community Page</h1>
-      <input
-        type="search"
-        value={searchQuery}
-        onChange={handleSearchQueryChange}
-        placeholder="Search posts"
-      />
-      <select value={selectedCategory} onChange={(event) => handleCategoryChange(event.target.value)}>
-        <option value="">All categories</option>
-        {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-      </select>
-      <select multiple value={selectedTags} onChange={(event) => handleTagChange(event.target.selectedOptions)}>
-        {tags.map((tag) => (
-          <option key={tag} value={tag}>
-            {tag}
-          </option>
-        ))}
-      </select>
-      <select value={sortOrder} onChange={(event) => handleSortByChange(event.target.value)}>
-        <option value="newest">Newest</option>
-        <option value="oldest">Oldest</option>
-        <option value="mostReactions">Most reactions</option>
-        <option value="mostComments">Most comments</option>
-      </select>
-      <select value={filterOptions.sortOrder} onChange={(event) => handleSortOrderChange(event.target.value)}>
-        <option value="desc">Descending</option>
-        <option value="asc">Ascending</option>
-      </select>
       {filteredPosts.map((post) => (
         <div key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.content}</p>
-          <p>Category: {post.category}</p>
-          <p>Tags: {post.tags.join(', ')}</p>
-          <p>Reactions: {post.reactions.length}</p>
-          <p>Comments: {post.comments.length}</p>
         </div>
       ))}
+      {loading && (
+        <div className="loading-indicator">
+          <p>Loading...</p>
+        </div>
+      )}
     </div>
   );
 }

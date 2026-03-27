@@ -132,5 +132,14 @@
 <link rel="canonical" href="https://moodwave.com" />
 <link rel="stylesheet" href="globals.css" type="text/css" media="all" />
 <meta http-equiv="Cache-Control" content="max-age=31536000, public" />
-<meta http-equiv="Expires" content="31536000" />
-<meta http-equiv="Pragma" content="public" />
+<meta http-equiv="Expires" content="Fri, 01 Jan 2038 00:00:00 GMT" />
+<meta name="og:title" content="MoodWave: Personalized Mental Wellness">
+<meta name="og:description" content="MoodWave: Personalized Mental Wellness, a platform for tracking and improving mental health through personalized recommendations and mood tracking tools.">
+<meta name="og:image" content="https://moodwave.com/og-image.png">
+<meta name="og:url" content="https://moodwave.com">
+<meta name="og:site_name" content="MoodWave">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MoodWave: Personalized Mental Wellness">
+<meta name="twitter:description" content="MoodWave: Personalized Mental Wellness, a platform for tracking and improving mental health through personalized recommendations and mood tracking tools.">
+<meta name="twitter:image" content="https://moodwave.com/twitter-image.png">
+<meta name="twitter:site" content="@moodwave">

@@ -131,92 +131,42 @@ const DashboardPage = () => {
   const pathname = usePathname();
 
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
-    layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-      recommendations: { x: 300, y: 0, width: 300, height: 200 },
-      goals: { x: 0, y: 200, width: 300, height: 200 },
-      community: { x: 300, y: 200, width: 300, height: 200 },
-      settings: { x: 0, y: 400, width: 300, height: 200 },
-    },
-    components: {
-      moodTracker: {
-        id: 'moodTracker',
-        component: <MemoizedMoodTracker />,
-        removable: false,
-        resizable: true,
-      },
-      recommendations: {
-        id: 'recommendations',
-        component: <MemoizedRecommendations />,
-        removable: false,
-        resizable: true,
-      },
-      goals: {
-        id: 'goals',
-        component: <MemoizedGoals />,
-        removable: false,
-        resizable: true,
-      },
-      community: {
-        id: 'community',
-        component: <MemoizedCommunity />,
-        removable: false,
-        resizable: true,
-      },
-      settings: {
-        id: 'settings',
-        component: <MemoizedSettings />,
-        removable: false,
-        resizable: true,
-      },
-    },
-    breakpoints: {
-      sm: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 200, height: 150 },
-          recommendations: { x: 200, y: 0, width: 200, height: 150 },
-          goals: { x: 0, y: 150, width: 200, height: 150 },
-          community: { x: 200, y: 150, width: 200, height: 150 },
-          settings: { x: 0, y: 300, width: 200, height: 150 },
-        },
-      },
-    },
+    layout: {},
+    components: {},
+    breakpoints: {},
   });
 
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      setDashboardConfig((prevConfig) => {
-        const newConfig = { ...prevConfig };
-        const activeComponent = newConfig.components[active.id];
-        const overComponent = newConfig.components[over.id];
-        const newLayout = { ...newConfig.layout };
-        newLayout[active.id] = newConfig.layout[over.id];
-        newLayout[over.id] = newConfig.layout[active.id];
-        newConfig.layout = newLayout;
-        return newConfig;
-      });
-    }
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const handleTutorialStep = (step: number) => {
+    setCurrentStep(step);
+  };
+
+  const handleDashboardConfigChange = (newConfig: DashboardConfig) => {
+    setDashboardConfig(newConfig);
   };
 
   return (
     <DashboardLayout>
-      <DndContext onDragEnd={handleDragEnd}>
+      <DndContext collisionDetection={closestCenter}>
         <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((componentId) => (
-            <div
-              key={componentId}
-              style={{
-                position: 'absolute',
-                top: dashboardConfig.layout[componentId].y,
-                left: dashboardConfig.layout[componentId].x,
-                width: dashboardConfig.layout[componentId].width,
-                height: dashboardConfig.layout[componentId].height,
-              }}
-            >
-              {dashboardConfig.components[componentId].component}
-            </div>
-          ))}
+          {Object.keys(dashboardConfig.components).map((componentId) => {
+            const component = dashboardConfig.components[componentId];
+            switch (component.id) {
+              case 'moodTracker':
+                return <MemoizedMoodTracker key={componentId} />;
+              case 'recommendations':
+                return <MemoizedRecommendations key={componentId} />;
+              case 'goals':
+                return <MemoizedGoals key={componentId} />;
+              case 'community':
+                return <MemoizedCommunity key={componentId} />;
+              case 'settings':
+                return <MemoizedSettings key={componentId} />;
+              default:
+                return null;
+            }
+          })}
         </SortableContext>
       </DndContext>
     </DashboardLayout>
