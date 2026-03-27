@@ -46,6 +46,19 @@ export default function CommunityPage() {
     sortOrder: 'desc',
   });
 
+  const handleScroll = () => {
+    const scrollPosition = window.scrollY + window.innerHeight;
+    const documentHeight = document.body.offsetHeight;
+    if (scrollPosition >= documentHeight * 0.9 && hasMorePosts && !loading) {
+      setIsFetching(true);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMorePosts, loading]);
+
   useEffect(() => {
     const fetchPosts = async () => {
       if (loading) return;
@@ -74,23 +87,22 @@ export default function CommunityPage() {
     fetchPosts();
   }, [pageNumber]);
 
-  const handleScroll = () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight && hasMorePosts && !loading) {
-      setIsFetching(true);
+  useEffect(() => {
+    if (isFetching) {
       setPageNumber((prevPageNumber) => prevPageNumber + 1);
       setIsFetching(false);
     }
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMorePosts, loading]);
+  }, [isFetching]);
 
   return (
     <div>
-      {/* existing JSX content */}
-      {isFetching && <div>Loading...</div>}
+      {filteredPosts.map((post) => (
+        <div key={post.id}>
+          {/* post content */}
+        </div>
+      ))}
+      {loading && <div>Loading...</div>}
+      {hasMorePosts && <div>Loading more posts...</div>}
     </div>
   );
 }

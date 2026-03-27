@@ -85,29 +85,44 @@ const MemoizedMoodTracker = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazyMoodTracker />
   </Suspense>
-));
+), (prevProps, nextProps) => {
+  // Only re-render if props change
+  return prevProps === nextProps;
+});
 const MemoizedRecommendations = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazyRecommendations />
   </Suspense>
-));
+), (prevProps, nextProps) => {
+  // Only re-render if props change
+  return prevProps === nextProps;
+});
 const MemoizedGoals = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazyGoals />
   </Suspense>
-));
+), (prevProps, nextProps) => {
+  // Only re-render if props change
+  return prevProps === nextProps;
+});
 const MemoizedCommunity = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazyCommunity />
   </Suspense>
-));
+), (prevProps, nextProps) => {
+  // Only re-render if props change
+  return prevProps === nextProps;
+});
 const MemoizedSettings = React.memo(() => (
   <Suspense fallback={<div>Loading...</div>}>
     <LazySettings />
   </Suspense>
-));
+), (prevProps, nextProps) => {
+  // Only re-render if props change
+  return prevProps === nextProps;
+});
 
-const App = () => {
+const DashboardPage = () => {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -117,59 +132,87 @@ const App = () => {
     breakpoints: {},
   });
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const [components, setComponents] = useState<Component[]>([]);
 
-  const handleTutorialStep = (step: number) => {
-    setCurrentStep(step);
+  useEffect(() => {
+    // Initialize dashboard config and components
+    const initialConfig: DashboardConfig = {
+      layout: {
+        moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+        recommendations: { x: 300, y: 0, width: 300, height: 200 },
+        goals: { x: 0, y: 200, width: 300, height: 200 },
+        community: { x: 300, y: 200, width: 300, height: 200 },
+        settings: { x: 0, y: 400, width: 300, height: 200 },
+      },
+      components: {
+        moodTracker: {
+          id: 'moodTracker',
+          component: <MemoizedMoodTracker />,
+          removable: false,
+          resizable: true,
+        },
+        recommendations: {
+          id: 'recommendations',
+          component: <MemoizedRecommendations />,
+          removable: false,
+          resizable: true,
+        },
+        goals: {
+          id: 'goals',
+          component: <MemoizedGoals />,
+          removable: false,
+          resizable: true,
+        },
+        community: {
+          id: 'community',
+          component: <MemoizedCommunity />,
+          removable: false,
+          resizable: true,
+        },
+        settings: {
+          id: 'settings',
+          component: <MemoizedSettings />,
+          removable: false,
+          resizable: true,
+        },
+      },
+      breakpoints: {},
+    };
+
+    setDashboardConfig(initialConfig);
+
+    const initialComponents: Component[] = [
+      { id: 'moodTracker', component: <MemoizedMoodTracker /> },
+      { id: 'recommendations', component: <MemoizedRecommendations /> },
+      { id: 'goals', component: <MemoizedGoals /> },
+      { id: 'community', component: <MemoizedCommunity /> },
+      { id: 'settings', component: <MemoizedSettings /> },
+    ];
+
+    setComponents(initialComponents);
+  }, []);
+
+  const handleDragEnd = (event: any) => {
+    // Update dashboard config and components on drag end
+    const { id, x, y } = event;
+    const updatedConfig = { ...dashboardConfig };
+    updatedConfig.layout[id] = { x, y, width: 300, height: 200 };
+    setDashboardConfig(updatedConfig);
   };
 
   return (
     <DashboardLayout>
       <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div key={id}>
-              {dashboardConfig.components[id].component}
+        <SortableContext items={components} strategy={rectSortingStrategy}>
+          {components.map((component) => (
+            <div key={component.id} style={{ position: 'absolute', left: dashboardConfig.layout[component.id].x, top: dashboardConfig.layout[component.id].y }}>
+              {component.component}
             </div>
           ))}
         </SortableContext>
-        <DragOverlay>
-          {dashboardConfig.components[Object.keys(dashboardConfig.components)[0]].component}
-        </DragOverlay>
       </DndContext>
-      <Suspense fallback={<div>Loading...</div>}>
-        {tutorialSteps.map((step, index) => (
-          <div key={index}>
-            {index === currentStep && (
-              <div>
-                <h2>{step.title}</h2>
-                <p>{step.description}</p>
-              </div>
-            )}
-          </div>
-        ))}
-      </Suspense>
-      <Suspense fallback={<div>Loading...</div>}>
-        <MemoizedMoodTracker />
-        <MemoizedRecommendations />
-        <MemoizedGoals />
-        <MemoizedCommunity />
-        <MemoizedSettings />
-      </Suspense>
     </DashboardLayout>
   );
 };
 
-const handleDragEnd = (event: any) => {
-  const { active, over } = event;
-  if (active.id !== over.id) {
-    const newComponents = { ...dashboardConfig.components };
-    const activeComponent = newComponents[active.id];
-    const overComponent = newComponents[over.id];
-    newComponents[active.id] = overComponent;
-    newComponents[over.id] = activeComponent;
-    setDashboardConfig({ ...dashboardConfig, components: newComponents });
-  }
-};
-
-export default App;
+export default DashboardPage;
