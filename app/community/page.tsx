@@ -80,7 +80,7 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
-      setPageNumber((prevPageNumber) => prevPageNumber + 1);
+      setPageNumber(pageNumber + 1);
       setLoading(false);
       setIsFetching(false);
     };
@@ -98,10 +98,14 @@ export default function CommunityPage() {
         </div>
       ))}
       {loading && (
-        <div>Loading...</div>
+        <div>
+          <p>Loading...</p>
+        </div>
       )}
       {isFetching && (
-        <div>Loading more posts...</div>
+        <div>
+          <p>Fetching more posts...</p>
+        </div>
       )}
     </div>
   );

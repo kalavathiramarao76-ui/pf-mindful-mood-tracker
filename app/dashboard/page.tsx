@@ -76,100 +76,47 @@ const tutorialSteps: TutorialStep[] = [
   },
 ];
 
-const MemoizedMoodTracker = React.memo(() => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <LazyMoodTracker />
-  </Suspense>
-), (prevProps, nextProps) => {
-  return prevProps === nextProps;
-});
+const loadComponent = (component: any) => {
+  const Component = lazy(() => import(`../components/${component}`));
+  return React.memo(() => (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Component />
+    </Suspense>
+  ));
+};
 
-const MemoizedRecommendations = React.memo(() => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <LazyRecommendations />
-  </Suspense>
-), (prevProps, nextProps) => {
-  return prevProps === nextProps;
-});
+const MemoizedMoodTracker = loadComponent('mood-tracker');
+const MemoizedRecommendations = loadComponent('recommendations');
+const MemoizedGoals = loadComponent('goals');
+const MemoizedCommunity = loadComponent('community');
+const MemoizedSettings = loadComponent('settings');
 
-const MemoizedGoals = React.memo(() => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <LazyGoals />
-  </Suspense>
-), (prevProps, nextProps) => {
-  return prevProps === nextProps;
-});
+const components = {
+  moodTracker: <MemoizedMoodTracker />,
+  recommendations: <MemoizedRecommendations />,
+  goals: <MemoizedGoals />,
+  community: <MemoizedCommunity />,
+  settings: <MemoizedSettings />,
+};
 
-const MemoizedCommunity = React.memo(() => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <LazyCommunity />
-  </Suspense>
-), (prevProps, nextProps) => {
-  return prevProps === nextProps;
-});
-
-const MemoizedSettings = React.memo(() => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <LazySettings />
-  </Suspense>
-), (prevProps, nextProps) => {
-  return prevProps === nextProps;
-});
-
-const DashboardPage = () => {
-  const [visibleComponents, setVisibleComponents] = useState({
-    moodTracker: true,
-    recommendations: true,
-    goals: true,
-    community: true,
-    settings: true,
-  });
-
-  const handleComponentVisibility = (component: string) => {
-    setVisibleComponents((prevVisibleComponents) => ({
-      ...prevVisibleComponents,
-      [component]: !prevVisibleComponents[component],
-    }));
-  };
+const Page = () => {
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <DashboardLayout>
       <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={items} strategy={rectSortingStrategy}>
-          {visibleComponents.moodTracker && <MemoizedMoodTracker />}
-          {visibleComponents.recommendations && <MemoizedRecommendations />}
-          {visibleComponents.goals && <MemoizedGoals />}
-          {visibleComponents.community && <MemoizedCommunity />}
-          {visibleComponents.settings && <MemoizedSettings />}
+          {components.map((component, index) => (
+            <div key={index}>{component}</div>
+          ))}
         </SortableContext>
+        <DragOverlay>
+          {activeId ? <div>{components[activeId]}</div> : null}
+        </DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
 };
 
-const handleDragEnd = (event: any) => {
-  const { active, over } = event;
-
-  if (active.id !== over.id) {
-    const oldIndex = items.indexOf(active.id);
-    const newIndex = items.indexOf(over.id);
-
-    const newItems = [...items];
-    const [removed] = newItems.splice(oldIndex, 1);
-
-    newItems.splice(newIndex, 0, removed);
-    setItems(newItems);
-  }
-};
-
-const items = [
-  'moodTracker',
-  'recommendations',
-  'goals',
-  'community',
-  'settings',
-];
-
-const [itemsState, setItems] = useState(items);
-
-export default DashboardPage;
+export default Page;
