@@ -80,11 +80,10 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
-      setPageNumber((prevPageNumber) => prevPageNumber + 1);
+      setPageNumber(pageNumber + 1);
       setLoading(false);
       setIsFetching(false);
     };
-
     if (isFetching) {
       fetchPosts();
     }

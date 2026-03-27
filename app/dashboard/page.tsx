@@ -126,7 +126,7 @@ const MemoizedSettings = React.memo(() => (
   return prevProps === nextProps;
 });
 
-const DashboardPage = () => {
+const Page = () => {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -140,10 +140,9 @@ const DashboardPage = () => {
           <MemoizedCommunity />
           <MemoizedSettings />
         </SortableContext>
-        <DragOverlay />
       </DndContext>
     </DashboardLayout>
   );
 };
 
-export default DashboardPage;
+export default Page;
