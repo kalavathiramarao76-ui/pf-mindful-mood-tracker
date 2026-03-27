@@ -126,17 +126,17 @@ const MemoizedSettings = React.memo(() => (
   return prevProps === nextProps;
 });
 
-const Page = () => {
+const DashboardPage = () => {
   const router = useRouter();
   const pathname = usePathname();
 
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
     layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 300 },
-      recommendations: { x: 300, y: 0, width: 300, height: 300 },
-      goals: { x: 0, y: 300, width: 300, height: 300 },
-      community: { x: 300, y: 300, width: 300, height: 300 },
-      settings: { x: 0, y: 600, width: 300, height: 300 },
+      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+      recommendations: { x: 300, y: 0, width: 300, height: 200 },
+      goals: { x: 0, y: 200, width: 300, height: 200 },
+      community: { x: 300, y: 200, width: 300, height: 200 },
+      settings: { x: 0, y: 400, width: 300, height: 200 },
     },
     components: {
       moodTracker: {
@@ -180,24 +180,6 @@ const Page = () => {
           settings: { x: 0, y: 200, width: 100, height: 100 },
         },
       },
-      md: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 200, height: 200 },
-          recommendations: { x: 200, y: 0, width: 200, height: 200 },
-          goals: { x: 0, y: 200, width: 200, height: 200 },
-          community: { x: 200, y: 200, width: 200, height: 200 },
-          settings: { x: 0, y: 400, width: 200, height: 200 },
-        },
-      },
-      lg: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 300, height: 300 },
-          recommendations: { x: 300, y: 0, width: 300, height: 300 },
-          goals: { x: 0, y: 300, width: 300, height: 300 },
-          community: { x: 300, y: 300, width: 300, height: 300 },
-          settings: { x: 0, y: 600, width: 300, height: 300 },
-        },
-      },
     },
   });
 
@@ -212,41 +194,29 @@ const Page = () => {
     }));
   };
 
-  const handleResize = (event: any) => {
-    const { id, width, height } = event;
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      layout: {
-        ...prevConfig.layout,
-        [id]: { x: prevConfig.layout[id].x, y: prevConfig.layout[id].y, width, height },
-      },
-    }));
-  };
-
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
+    <DashboardLayout>
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
           {Object.keys(dashboardConfig.components).map((id) => (
             <div
               key={id}
               style={{
                 position: 'absolute',
-                left: dashboardConfig.layout[id].x,
                 top: dashboardConfig.layout[id].y,
+                left: dashboardConfig.layout[id].x,
                 width: dashboardConfig.layout[id].width,
                 height: dashboardConfig.layout[id].height,
                 border: '1px solid black',
-                backgroundColor: 'white',
               }}
             >
               {dashboardConfig.components[id].component}
             </div>
           ))}
-        </DashboardLayout>
-      </SortableContext>
-    </DndContext>
+        </SortableContext>
+      </DndContext>
+    </DashboardLayout>
   );
 };
 
-export default Page;
+export default DashboardPage;
