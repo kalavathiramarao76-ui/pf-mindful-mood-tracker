@@ -131,108 +131,84 @@ const DashboardPage = () => {
   const pathname = usePathname();
 
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
-    layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-      recommendations: { x: 300, y: 0, width: 300, height: 200 },
-      goals: { x: 0, y: 200, width: 300, height: 200 },
-      community: { x: 300, y: 200, width: 300, height: 200 },
-      settings: { x: 0, y: 400, width: 300, height: 200 },
-    },
-    components: {
-      moodTracker: {
-        id: 'moodTracker',
-        component: <MemoizedMoodTracker />,
-        removable: false,
-        resizable: true,
-      },
-      recommendations: {
-        id: 'recommendations',
-        component: <MemoizedRecommendations />,
-        removable: false,
-        resizable: true,
-      },
-      goals: {
-        id: 'goals',
-        component: <MemoizedGoals />,
-        removable: false,
-        resizable: true,
-      },
-      community: {
-        id: 'community',
-        component: <MemoizedCommunity />,
-        removable: false,
-        resizable: true,
-      },
-      settings: {
-        id: 'settings',
-        component: <MemoizedSettings />,
-        removable: false,
-        resizable: true,
-      },
-    },
-    breakpoints: {
-      small: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 200, height: 150 },
-          recommendations: { x: 200, y: 0, width: 200, height: 150 },
-          goals: { x: 0, y: 150, width: 200, height: 150 },
-          community: { x: 200, y: 150, width: 200, height: 150 },
-          settings: { x: 0, y: 300, width: 200, height: 150 },
-        },
-      },
-      medium: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 250, height: 200 },
-          recommendations: { x: 250, y: 0, width: 250, height: 200 },
-          goals: { x: 0, y: 200, width: 250, height: 200 },
-          community: { x: 250, y: 200, width: 250, height: 200 },
-          settings: { x: 0, y: 400, width: 250, height: 200 },
-        },
-      },
-      large: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 300, height: 250 },
-          recommendations: { x: 300, y: 0, width: 300, height: 250 },
-          goals: { x: 0, y: 250, width: 300, height: 250 },
-          community: { x: 300, y: 250, width: 300, height: 250 },
-          settings: { x: 0, y: 500, width: 300, height: 250 },
-        },
-      },
-    },
+    layout: {},
+    components: {},
+    breakpoints: {},
   });
 
+  const [components, setComponents] = useState<Component[]>([]);
+
+  useEffect(() => {
+    const fetchDashboardConfig = async () => {
+      // Fetch dashboard config from API or storage
+      const config = await fetch('/api/dashboard-config');
+      const data = await config.json();
+      setDashboardConfig(data);
+    };
+
+    fetchDashboardConfig();
+  }, []);
+
+  useEffect(() => {
+    const fetchComponents = async () => {
+      // Fetch components from API or storage
+      const components = await fetch('/api/components');
+      const data = await components.json();
+      setComponents(data);
+    };
+
+    fetchComponents();
+  }, []);
+
   const handleDragEnd = (event: any) => {
-    const { id, x, y } = event;
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      layout: {
-        ...prevConfig.layout,
-        [id]: { x, y, width: prevConfig.layout[id].width, height: prevConfig.layout[id].height },
-      },
-    }));
+    // Handle drag end event
+  };
+
+  const handleDragStart = (event: any) => {
+    // Handle drag start event
+  };
+
+  const handleDragOver = (event: any) => {
+    // Handle drag over event
+  };
+
+  const handleDrop = (event: any) => {
+    // Handle drop event
+  };
+
+  const renderComponents = () => {
+    return components.map((component) => {
+      switch (component.id) {
+        case 'moodTracker':
+          return <MemoizedMoodTracker key={component.id} />;
+        case 'recommendations':
+          return <MemoizedRecommendations key={component.id} />;
+        case 'goals':
+          return <MemoizedGoals key={component.id} />;
+        case 'community':
+          return <MemoizedCommunity key={component.id} />;
+        case 'settings':
+          return <MemoizedSettings key={component.id} />;
+        default:
+          return null;
+      }
+    });
   };
 
   return (
     <DashboardLayout>
-      <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                top: dashboardConfig.layout[id].y,
-                left: dashboardConfig.layout[id].x,
-                width: dashboardConfig.layout[id].width,
-                height: dashboardConfig.layout[id].height,
-                border: '1px solid #ccc',
-                padding: '10px',
-              }}
-            >
-              {dashboardConfig.components[id].component}
-            </div>
-          ))}
+      <DndContext
+        onDragEnd={handleDragEnd}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <SortableContext items={components} strategy={rectSortingStrategy}>
+          {renderComponents()}
         </SortableContext>
+        <DragOverlay>
+          {renderComponents()}
+        </DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
