@@ -85,57 +85,73 @@ export default function CommunityPage() {
     fetchPosts();
   }, [pageNumber]);
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    const filteredData = await filterPosts(query, filterOptions);
-    setFilteredPosts(filteredData);
-  };
-
-  const handleFilterChange = (filterName: string, value: any) => {
-    setFilterOptions((prevFilters) => ({ ...prevFilters, [filterName]: value }));
-  };
-
-  const handleSortChange = (sortOrder: string) => {
-    setSortOrder(sortOrder);
-    const sortedData = sortPosts(filteredPosts, sortOrder);
-    setFilteredPosts(sortedData);
-  };
-
-  const filterPosts = async (query: string, filters: any) => {
-    const filteredData = posts.filter((post) => {
-      const categoryMatch = filters.category ? post.category === filters.category : true;
-      const tagsMatch = filters.tags.length ? filters.tags.every((tag) => post.tags.includes(tag)) : true;
-      const searchQueryMatch = query ? post.content.toLowerCase().includes(query.toLowerCase()) : true;
+  const applyFilters = (posts) => {
+    const filteredPosts = posts.filter((post) => {
+      const categoryMatch = filterOptions.category ? post.category === filterOptions.category : true;
+      const tagsMatch = filterOptions.tags.length ? filterOptions.tags.every((tag) => post.tags.includes(tag)) : true;
+      const searchQueryMatch = filterOptions.searchQuery ? post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase()) : true;
       return categoryMatch && tagsMatch && searchQueryMatch;
     });
-    return filteredData;
+    return filteredPosts;
   };
 
-  const sortPosts = (posts: any[], sortOrder: string) => {
-    switch (sortOrder) {
-      case 'newest':
-        return posts.sort((a, b) => b.createdAt - a.createdAt);
-      case 'oldest':
-        return posts.sort((a, b) => a.createdAt - b.createdAt);
-      case 'mostReactions':
-        return posts.sort((a, b) => b.reactions.length - a.reactions.length);
-      default:
-        return posts;
-    }
+  const sortPosts = (posts) => {
+    const sortedPosts = posts.sort((a, b) => {
+      if (filterOptions.sortBy === 'newest') {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (filterOptions.sortBy === 'oldest') {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      } else if (filterOptions.sortBy === 'mostReactions') {
+        return b.reactions.length - a.reactions.length;
+      } else if (filterOptions.sortBy === 'mostComments') {
+        return b.comments.length - a.comments.length;
+      }
+    });
+    return sortedPosts;
+  };
+
+  useEffect(() => {
+    const filteredPosts = applyFilters(posts);
+    const sortedPosts = sortPosts(filteredPosts);
+    setFilteredPosts(sortedPosts);
+  }, [posts, filterOptions]);
+
+  const handleSearchQueryChange = (event) => {
+    const searchQuery = event.target.value;
+    setSearchQuery(searchQuery);
+    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, searchQuery }));
+  };
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, category }));
+  };
+
+  const handleTagChange = (tags) => {
+    setSelectedTags(tags);
+    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, tags }));
+  };
+
+  const handleSortByChange = (sortBy) => {
+    setSortOrder(sortBy);
+    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, sortBy }));
+  };
+
+  const handleSortOrderChange = (sortOrder) => {
+    setSortOrder(sortOrder);
+    setFilterOptions((prevFilterOptions) => ({ ...prevFilterOptions, sortOrder }));
   };
 
   return (
     <div>
+      <h1>Community Page</h1>
       <input
         type="search"
         value={searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
+        onChange={handleSearchQueryChange}
         placeholder="Search posts"
       />
-      <select
-        value={filterOptions.category}
-        onChange={(e) => handleFilterChange('category', e.target.value)}
-      >
+      <select value={selectedCategory} onChange={(event) => handleCategoryChange(event.target.value)}>
         <option value="">All categories</option>
         {categories.map((category) => (
           <option key={category} value={category}>
@@ -143,26 +159,31 @@ export default function CommunityPage() {
           </option>
         ))}
       </select>
-      <select
-        multiple
-        value={filterOptions.tags}
-        onChange={(e) => handleFilterChange('tags', Array.from(e.target.selectedOptions, (option) => option.value))}
-      >
+      <select multiple value={selectedTags} onChange={(event) => handleTagChange(event.target.selectedOptions)}>
         {tags.map((tag) => (
           <option key={tag} value={tag}>
             {tag}
           </option>
         ))}
       </select>
-      <button onClick={() => handleSortChange('newest')}>Newest</button>
-      <button onClick={() => handleSortChange('oldest')}>Oldest</button>
-      <button onClick={() => handleSortChange('mostReactions')}>Most reactions</button>
+      <select value={sortOrder} onChange={(event) => handleSortByChange(event.target.value)}>
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="mostReactions">Most reactions</option>
+        <option value="mostComments">Most comments</option>
+      </select>
+      <select value={filterOptions.sortOrder} onChange={(event) => handleSortOrderChange(event.target.value)}>
+        <option value="desc">Descending</option>
+        <option value="asc">Ascending</option>
+      </select>
       {filteredPosts.map((post) => (
         <div key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.content}</p>
-          <p>Reactions: {postReactions[post.id].length}</p>
-          <p>Comments: {postComments[post.id].length}</p>
+          <p>Category: {post.category}</p>
+          <p>Tags: {post.tags.join(', ')}</p>
+          <p>Reactions: {post.reactions.length}</p>
+          <p>Comments: {post.comments.length}</p>
         </div>
       ))}
     </div>

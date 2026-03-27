@@ -173,44 +173,48 @@ const DashboardPage = () => {
     breakpoints: {
       sm: {
         layout: {
-          moodTracker: { x: 0, y: 0, width: 100, height: 100 },
-          recommendations: { x: 100, y: 0, width: 100, height: 100 },
-          goals: { x: 0, y: 100, width: 100, height: 100 },
-          community: { x: 100, y: 100, width: 100, height: 100 },
-          settings: { x: 0, y: 200, width: 100, height: 100 },
+          moodTracker: { x: 0, y: 0, width: 200, height: 150 },
+          recommendations: { x: 200, y: 0, width: 200, height: 150 },
+          goals: { x: 0, y: 150, width: 200, height: 150 },
+          community: { x: 200, y: 150, width: 200, height: 150 },
+          settings: { x: 0, y: 300, width: 200, height: 150 },
         },
       },
     },
   });
 
   const handleDragEnd = (event: any) => {
-    const { id, x, y } = event;
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      layout: {
-        ...prevConfig.layout,
-        [id]: { x, y, width: prevConfig.layout[id].width, height: prevConfig.layout[id].height },
-      },
-    }));
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setDashboardConfig((prevConfig) => {
+        const newConfig = { ...prevConfig };
+        const activeComponent = newConfig.components[active.id];
+        const overComponent = newConfig.components[over.id];
+        const newLayout = { ...newConfig.layout };
+        newLayout[active.id] = newConfig.layout[over.id];
+        newLayout[over.id] = newConfig.layout[active.id];
+        newConfig.layout = newLayout;
+        return newConfig;
+      });
+    }
   };
 
   return (
     <DashboardLayout>
       <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((id) => (
+          {Object.keys(dashboardConfig.components).map((componentId) => (
             <div
-              key={id}
+              key={componentId}
               style={{
                 position: 'absolute',
-                top: dashboardConfig.layout[id].y,
-                left: dashboardConfig.layout[id].x,
-                width: dashboardConfig.layout[id].width,
-                height: dashboardConfig.layout[id].height,
-                border: '1px solid black',
+                top: dashboardConfig.layout[componentId].y,
+                left: dashboardConfig.layout[componentId].x,
+                width: dashboardConfig.layout[componentId].width,
+                height: dashboardConfig.layout[componentId].height,
               }}
             >
-              {dashboardConfig.components[id].component}
+              {dashboardConfig.components[componentId].component}
             </div>
           ))}
         </SortableContext>
