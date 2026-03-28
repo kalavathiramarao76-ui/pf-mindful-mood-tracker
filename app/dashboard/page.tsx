@@ -92,191 +92,43 @@ const loadComponent = (component: any) => {
   ));
 };
 
-const MemoizedMoodTracker = loadComponent('mood-tracker');
-const MemoizedRecommendations = loadComponent('recommendations');
-const MemoizedGoals = loadComponent('goals');
-const MemoizedCommunity = loadComponent('community');
-const MemoizedSettings = loadComponent('settings');
-
 const components = {
-  moodTracker: <MemoizedMoodTracker />,
-  recommendations: <MemoizedRecommendations />,
-  goals: <MemoizedGoals />,
-  community: <MemoizedCommunity />,
-  settings: <MemoizedSettings />,
+  moodTracker: loadComponent('mood-tracker'),
+  recommendations: loadComponent('recommendations'),
+  goals: loadComponent('goals'),
+  community: loadComponent('community'),
+  settings: loadComponent('settings'),
 };
 
-const Dashboard = () => {
-  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>({
-    layout: {
-      moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-      recommendations: { x: 300, y: 0, width: 300, height: 200 },
-      goals: { x: 0, y: 200, width: 300, height: 200 },
-      community: { x: 300, y: 200, width: 300, height: 200 },
-      settings: { x: 0, y: 400, width: 300, height: 200 },
-    },
-    components: {
-      moodTracker: {
-        id: 'moodTracker',
-        component: <MemoizedMoodTracker />,
-        removable: true,
-        resizable: true,
-      },
-      recommendations: {
-        id: 'recommendations',
-        component: <MemoizedRecommendations />,
-        removable: true,
-        resizable: true,
-      },
-      goals: {
-        id: 'goals',
-        component: <MemoizedGoals />,
-        removable: true,
-        resizable: true,
-      },
-      community: {
-        id: 'community',
-        component: <MemoizedCommunity />,
-        removable: true,
-        resizable: true,
-      },
-      settings: {
-        id: 'settings',
-        component: <MemoizedSettings />,
-        removable: true,
-        resizable: true,
-      },
-    },
-    breakpoints: {
-      sm: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 100, height: 100 },
-          recommendations: { x: 100, y: 0, width: 100, height: 100 },
-          goals: { x: 0, y: 100, width: 100, height: 100 },
-          community: { x: 100, y: 100, width: 100, height: 100 },
-          settings: { x: 0, y: 200, width: 100, height: 100 },
-        },
-      },
-      md: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 200, height: 150 },
-          recommendations: { x: 200, y: 0, width: 200, height: 150 },
-          goals: { x: 0, y: 150, width: 200, height: 150 },
-          community: { x: 200, y: 150, width: 200, height: 150 },
-          settings: { x: 0, y: 300, width: 200, height: 150 },
-        },
-      },
-      lg: {
-        layout: {
-          moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-          recommendations: { x: 300, y: 0, width: 300, height: 200 },
-          goals: { x: 0, y: 200, width: 300, height: 200 },
-          community: { x: 300, y: 200, width: 300, height: 200 },
-          settings: { x: 0, y: 400, width: 300, height: 200 },
-        },
-      },
-    },
-  });
+const DashboardPage = () => {
+  const [activeComponent, setActiveComponent] = useState('moodTracker');
 
-  const handleResize = (id: string, width: number, height: number) => {
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      layout: {
-        ...prevConfig.layout,
-        [id]: { ...prevConfig.layout[id], width, height },
-      },
-    }));
-  };
-
-  const handleMove = (id: string, x: number, y: number) => {
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      layout: {
-        ...prevConfig.layout,
-        [id]: { ...prevConfig.layout[id], x, y },
-      },
-    }));
-  };
-
-  const handleRemove = (id: string) => {
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      components: {
-        ...prevConfig.components,
-        [id]: { ...prevConfig.components[id], removable: false },
-      },
-    }));
-  };
-
-  const handleAdd = (id: string) => {
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      components: {
-        ...prevConfig.components,
-        [id]: { ...prevConfig.components[id], removable: true },
-      },
-    }));
-  };
-
-  const handleBreakpointChange = (breakpoint: string) => {
-    setDashboardConfig((prevConfig) => ({
-      ...prevConfig,
-      layout: prevConfig.breakpoints[breakpoint].layout,
-    }));
+  const handleComponentChange = (component: string) => {
+    setActiveComponent(component);
   };
 
   return (
     <DashboardLayout>
-      <DndContext onDragEnd={(event) => console.log(event)}>
-        <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                left: dashboardConfig.layout[id].x,
-                top: dashboardConfig.layout[id].y,
-                width: dashboardConfig.layout[id].width,
-                height: dashboardConfig.layout[id].height,
-                border: '1px solid black',
-                backgroundColor: 'white',
-              }}
-            >
-              {dashboardConfig.components[id].component}
-              {dashboardConfig.components[id].resizable && (
-                <button onClick={() => handleResize(id, 300, 200)}>Resize</button>
-              )}
-              {dashboardConfig.components[id].removable && (
-                <button onClick={() => handleRemove(id)}>Remove</button>
-              )}
-              <button onClick={() => handleMove(id, 100, 100)}>Move</button>
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
+          {Object.keys(components).map((component, index) => (
+            <div key={component}>
+              <Suspense fallback={<div>Loading...</div>}>
+                {components[component]}
+              </Suspense>
             </div>
           ))}
         </SortableContext>
-        <DragOverlay>
-          {({ overlay }) => (
-            <div
-              style={{
-                position: 'absolute',
-                left: overlay.x,
-                top: overlay.y,
-                width: overlay.width,
-                height: overlay.height,
-                border: '1px solid black',
-                backgroundColor: 'white',
-              }}
-            >
-              {overlay.component}
-            </div>
-          )}
-        </DragOverlay>
       </DndContext>
-      <button onClick={() => handleAdd('moodTracker')}>Add Mood Tracker</button>
-      <button onClick={() => handleBreakpointChange('sm')}>Switch to Small Breakpoint</button>
-      <button onClick={() => handleBreakpointChange('md')}>Switch to Medium Breakpoint</button>
-      <button onClick={() => handleBreakpointChange('lg')}>Switch to Large Breakpoint</button>
     </DashboardLayout>
   );
 };
 
-export default Dashboard;
+const handleDragEnd = (event: any) => {
+  const { active, over } = event;
+  if (active.id !== over.id) {
+    // Update the component order
+  }
+};
+
+export default DashboardPage;
