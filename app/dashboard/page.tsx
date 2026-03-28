@@ -102,17 +102,41 @@ const components = {
 
 const DashboardPage = () => {
   const [activeComponent, setActiveComponent] = useState('moodTracker');
+  const [showTutorial, setShowTutorial] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const handleComponentChange = (component: string) => {
     setActiveComponent(component);
   };
 
+  const handleTutorialNext = () => {
+    if (currentStep < tutorialSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      setShowTutorial(false);
+    }
+  };
+
+  const handleTutorialSkip = () => {
+    setShowTutorial(false);
+  };
+
   return (
     <DashboardLayout>
-      <DndContext onDragEnd={handleDragEnd}>
+      {showTutorial && (
+        <div className="tutorial-overlay">
+          <div className="tutorial-step">
+            <h2>{tutorialSteps[currentStep].title}</h2>
+            <p>{tutorialSteps[currentStep].description}</p>
+            <button onClick={handleTutorialNext}>Next</button>
+            <button onClick={handleTutorialSkip}>Skip</button>
+          </div>
+        </div>
+      )}
+      <DndContext onDragEnd={handleComponentChange}>
         <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
           {Object.keys(components).map((component, index) => (
-            <div key={component}>
+            <div key={component} className="component">
               <Suspense fallback={<div>Loading...</div>}>
                 {components[component]}
               </Suspense>
@@ -122,13 +146,6 @@ const DashboardPage = () => {
       </DndContext>
     </DashboardLayout>
   );
-};
-
-const handleDragEnd = (event: any) => {
-  const { active, over } = event;
-  if (active.id !== over.id) {
-    // Update the component order
-  }
 };
 
 export default DashboardPage;

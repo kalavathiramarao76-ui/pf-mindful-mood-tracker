@@ -78,9 +78,9 @@ export default function CommunityPage() {
         reactionsMap[id] = reactions[index];
         commentsMap[id] = comments[index];
       });
-      setPostReactions((prevReactions) => ({ ...prevReactions, ...reactionsMap }));
-      setPostComments((prevComments) => ({ ...prevComments, ...commentsMap }));
-      setPageNumber((prevPageNumber) => prevPageNumber + 1);
+      setPostReactions(reactionsMap);
+      setPostComments(commentsMap);
+      setPageNumber(pageNumber + 1);
       setLoading(false);
       setIsFetching(false);
     };
@@ -91,7 +91,7 @@ export default function CommunityPage() {
 
   return (
     <div>
-      {posts.map((post) => (
+      {filteredPosts.map((post) => (
         <div key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.content}</p>
@@ -102,9 +102,9 @@ export default function CommunityPage() {
           <p>Loading...</p>
         </div>
       )}
-      {isFetching && (
+      {hasMorePosts && !loading && (
         <div>
-          <p>Loading more posts...</p>
+          <p>Scroll to load more...</p>
         </div>
       )}
     </div>
