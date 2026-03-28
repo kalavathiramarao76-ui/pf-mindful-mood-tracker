@@ -104,34 +104,48 @@ const Page = () => {
   const pathname = usePathname();
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialCompleted, setIsTutorialCompleted] = useState(false);
+  const [layout, setLayout] = useState<Layout>({
+    moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+    recommendations: { x: 300, y: 0, width: 300, height: 200 },
+    goals: { x: 0, y: 200, width: 300, height: 200 },
+    community: { x: 300, y: 200, width: 300, height: 200 },
+    settings: { x: 0, y: 400, width: 300, height: 200 },
+  });
 
-  const simplifiedComponents = {
-    primary: [
-      <LazyMoodTracker key="moodTracker" />,
-      <LazyRecommendations key="recommendations" />,
-    ],
-    secondary: [
-      <LazyGoals key="goals" />,
-      <LazyCommunity key="community" />,
-      <LazySettings key="settings" />,
-    ],
+  const handleDragEnd = (event: any) => {
+    const { id, x, y } = event;
+    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x, y, width: prevLayout[id].width, height: prevLayout[id].height } }));
+  };
+
+  const handleResize = (id: string, width: number, height: number) => {
+    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x: prevLayout[id].x, y: prevLayout[id].y, width, height } }));
   };
 
   return (
-    <DashboardLayout>
-      <DndContext collisionDetection={closestCenter}>
-        <SortableContext items={Object.keys(simplifiedComponents.primary)} strategy={rectSortingStrategy}>
-          {simplifiedComponents.primary.map((component, index) => (
-            <div key={index}>{component}</div>
+    <DndContext onDragEnd={handleDragEnd}>
+      <SortableContext items={Object.keys(layout)} strategy={rectSortingStrategy}>
+        <DashboardLayout>
+          {Object.keys(layout).map((id) => (
+            <div
+              key={id}
+              style={{
+                position: 'absolute',
+                top: layout[id].y,
+                left: layout[id].x,
+                width: layout[id].width,
+                height: layout[id].height,
+                border: '1px solid black',
+                resize: 'both',
+                overflow: 'auto',
+              }}
+              onResize={(e) => handleResize(id, e.target.offsetWidth, e.target.offsetHeight)}
+            >
+              {components[id as keyof typeof components]}
+            </div>
           ))}
-        </SortableContext>
-        <SortableContext items={Object.keys(simplifiedComponents.secondary)} strategy={rectSortingStrategy}>
-          {simplifiedComponents.secondary.map((component, index) => (
-            <div key={index}>{component}</div>
-          ))}
-        </SortableContext>
-      </DndContext>
-    </DashboardLayout>
+        </DashboardLayout>
+      </SortableContext>
+    </DndContext>
   );
 };
 

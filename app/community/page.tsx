@@ -39,7 +39,7 @@ export default function CommunityPage() {
   const [isFetching, setIsFetching] = useState(false);
   const [sortOrder, setSortOrder] = useState('newest');
   const [filterOptions, setFilterOptions] = useState({
-    category: '',
+    categories: [],
     tags: [],
     searchQuery: '',
     sortBy: 'newest',
@@ -83,85 +83,105 @@ export default function CommunityPage() {
       setLoading(false);
     };
     fetchPosts();
-  }, [pageNumber]);
+  }, [pageNumber, loading]);
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    const filteredData = await filterPosts(query, filterOptions);
-    setFilteredPosts(filteredData);
-  };
+  useEffect(() => {
+    const filterPosts = () => {
+      const filtered = posts.filter((post) => {
+        const categoryMatch = filterOptions.categories.length === 0 || filterOptions.categories.includes(post.category);
+        const tagMatch = filterOptions.tags.length === 0 || filterOptions.tags.some((tag) => post.tags.includes(tag));
+        const searchMatch = post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase());
+        return categoryMatch && tagMatch && searchMatch;
+      });
+      setFilteredPosts(filtered);
+    };
+    filterPosts();
+  }, [posts, filterOptions]);
 
-  const handleFilterChange = (filter: string, value: any) => {
-    setFilterOptions((prevFilters) => ({ ...prevFilters, [filter]: value }));
-    const filteredData = filterPosts(searchQuery, { ...filterOptions, [filter]: value });
-    setFilteredPosts(filteredData);
-  };
-
-  const filterPosts = async (query: string, filters: any) => {
-    const data = await getCommunityPosts(pageNumber);
-    const filteredData = data.filter((post) => {
-      const categoryMatch = filters.category ? post.category === filters.category : true;
-      const tagMatch = filters.tags.length ? filters.tags.some((tag) => post.tags.includes(tag)) : true;
-      const searchMatch = query ? post.content.toLowerCase().includes(query.toLowerCase()) : true;
-      return categoryMatch && tagMatch && searchMatch;
-    });
-    if (filters.sortBy === 'newest') {
-      filteredData.sort((a, b) => b.createdAt - a.createdAt);
-    } else if (filters.sortBy === 'oldest') {
-      filteredData.sort((a, b) => a.createdAt - b.createdAt);
+  const handleCategoryChange = (category) => {
+    if (filterOptions.categories.includes(category)) {
+      setFilterOptions((prevOptions) => ({
+        ...prevOptions,
+        categories: prevOptions.categories.filter((cat) => cat !== category),
+      }));
+    } else {
+      setFilterOptions((prevOptions) => ({
+        ...prevOptions,
+        categories: [...prevOptions.categories, category],
+      }));
     }
-    return filteredData;
   };
 
-  const handleSortChange = (sortOrder: string) => {
-    setSortOrder(sortOrder);
-    const sortedData = [...filteredPosts];
-    if (sortOrder === 'newest') {
-      sortedData.sort((a, b) => b.createdAt - a.createdAt);
-    } else if (sortOrder === 'oldest') {
-      sortedData.sort((a, b) => a.createdAt - b.createdAt);
+  const handleTagChange = (tag) => {
+    if (filterOptions.tags.includes(tag)) {
+      setFilterOptions((prevOptions) => ({
+        ...prevOptions,
+        tags: prevOptions.tags.filter((t) => t !== tag),
+      }));
+    } else {
+      setFilterOptions((prevOptions) => ({
+        ...prevOptions,
+        tags: [...prevOptions.tags, tag],
+      }));
     }
-    setFilteredPosts(sortedData);
+  };
+
+  const handleSearchQueryChange = (query) => {
+    setFilterOptions((prevOptions) => ({
+      ...prevOptions,
+      searchQuery: query,
+    }));
   };
 
   return (
     <div>
-      <input
-        type="search"
-        value={searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
-        placeholder="Search posts"
-      />
-      <select
-        value={filterOptions.category}
-        onChange={(e) => handleFilterChange('category', e.target.value)}
-      >
-        <option value="">All categories</option>
-        {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
+      <h1>Community Page</h1>
+      <div>
+        <label>Categories:</label>
+        <ul>
+          {categories.map((category) => (
+            <li key={category}>
+              <input
+                type="checkbox"
+                checked={filterOptions.categories.includes(category)}
+                onChange={() => handleCategoryChange(category)}
+              />
+              <span>{category}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <label>Tags:</label>
+        <ul>
+          {tags.map((tag) => (
+            <li key={tag}>
+              <input
+                type="checkbox"
+                checked={filterOptions.tags.includes(tag)}
+                onChange={() => handleTagChange(tag)}
+              />
+              <span>{tag}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <label>Search Query:</label>
+        <input
+          type="text"
+          value={filterOptions.searchQuery}
+          onChange={(e) => handleSearchQueryChange(e.target.value)}
+        />
+      </div>
+      <div>
+        {filteredPosts.map((post) => (
+          <div key={post.id}>
+            <h2>{post.title}</h2>
+            <p>{post.content}</p>
+          </div>
         ))}
-      </select>
-      <select
-        multiple
-        value={filterOptions.tags}
-        onChange={(e) => handleFilterChange('tags', Array.from(e.target.selectedOptions, (option) => option.value))}
-      >
-        {tags.map((tag) => (
-          <option key={tag} value={tag}>
-            {tag}
-          </option>
-        ))}
-      </select>
-      <button onClick={() => handleSortChange('newest')}>Newest</button>
-      <button onClick={() => handleSortChange('oldest')}>Oldest</button>
-      {filteredPosts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-        </div>
-      ))}
+      </div>
     </div>
   );
 }
