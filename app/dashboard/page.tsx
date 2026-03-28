@@ -103,15 +103,11 @@ const components = {
 const DashboardPage = () => {
   const [activeComponent, setActiveComponent] = useState('moodTracker');
   const [showTutorial, setShowTutorial] = useState(true);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const handleComponentChange = (component: string) => {
-    setActiveComponent(component);
-  };
+  const [currentTutorialStep, setCurrentTutorialStep] = useState(0);
 
   const handleTutorialNext = () => {
-    if (currentStep < tutorialSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
+    if (currentTutorialStep < tutorialSteps.length - 1) {
+      setCurrentTutorialStep(currentTutorialStep + 1);
     } else {
       setShowTutorial(false);
     }
@@ -124,19 +120,38 @@ const DashboardPage = () => {
   return (
     <DashboardLayout>
       {showTutorial && (
-        <div className="tutorial-overlay">
-          <div className="tutorial-step">
-            <h2>{tutorialSteps[currentStep].title}</h2>
-            <p>{tutorialSteps[currentStep].description}</p>
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              padding: '20px',
+              borderRadius: '10px',
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h2>{tutorialSteps[currentTutorialStep].title}</h2>
+            <p>{tutorialSteps[currentTutorialStep].description}</p>
             <button onClick={handleTutorialNext}>Next</button>
             <button onClick={handleTutorialSkip}>Skip</button>
           </div>
         </div>
       )}
-      <DndContext onDragEnd={handleComponentChange}>
+      <DndContext collisionDetection={closestCenter}>
         <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
           {Object.keys(components).map((component, index) => (
-            <div key={component} className="component">
+            <div key={component} style={{ width: '100%', height: '100%' }}>
               <Suspense fallback={<div>Loading...</div>}>
                 {components[component]}
               </Suspense>

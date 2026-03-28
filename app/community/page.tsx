@@ -80,33 +80,113 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
-      setPageNumber(pageNumber + 1);
       setLoading(false);
       setIsFetching(false);
     };
-    if (isFetching) {
-      fetchPosts();
+    fetchPosts();
+  }, [pageNumber, loading]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    const filtered = posts.filter((post) => {
+      const postContent = post.content.toLowerCase();
+      const queryLower = query.toLowerCase();
+      return postContent.includes(queryLower);
+    });
+    setFilteredPosts(filtered);
+  };
+
+  const handleFilter = (options: any) => {
+    setFilterOptions(options);
+    const filtered = posts.filter((post) => {
+      const postCategory = post.category;
+      const postTags = post.tags;
+      const selectedCategory = options.categories;
+      const selectedTags = options.tags;
+      const searchQuery = options.searchQuery.toLowerCase();
+      const sortBy = options.sortBy;
+      const sortOrder = options.sortOrder;
+
+      if (selectedCategory.length > 0 && !selectedCategory.includes(postCategory)) {
+        return false;
+      }
+
+      if (selectedTags.length > 0 && !selectedTags.every((tag: string) => postTags.includes(tag))) {
+        return false;
+      }
+
+      if (searchQuery !== '' && !post.content.toLowerCase().includes(searchQuery)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (options.sortBy === 'newest') {
+      filtered.sort((a, b) => b.createdAt - a.createdAt);
+    } else if (options.sortBy === 'oldest') {
+      filtered.sort((a, b) => a.createdAt - b.createdAt);
     }
-  }, [isFetching, pageNumber, loading]);
+
+    if (options.sortOrder === 'desc') {
+      filtered.reverse();
+    }
+
+    setFilteredPosts(filtered);
+  };
+
+  const handleSort = (sortBy: string, sortOrder: string) => {
+    setSortOrder(sortBy);
+    const sorted = filteredPosts.slice();
+    if (sortBy === 'newest') {
+      sorted.sort((a, b) => b.createdAt - a.createdAt);
+    } else if (sortBy === 'oldest') {
+      sorted.sort((a, b) => a.createdAt - b.createdAt);
+    }
+    if (sortOrder === 'desc') {
+      sorted.reverse();
+    }
+    setFilteredPosts(sorted);
+  };
 
   return (
     <div>
-      {filteredPosts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-        </div>
-      ))}
-      {loading && (
-        <div>
-          <p>Loading...</p>
-        </div>
-      )}
-      {hasMorePosts && !loading && (
-        <div>
-          <p>Scroll to load more...</p>
-        </div>
-      )}
+      <input
+        type="search"
+        value={searchQuery}
+        onChange={(e) => handleSearch(e.target.value)}
+        placeholder="Search posts"
+      />
+      <select
+        value={filterOptions.sortBy}
+        onChange={(e) => handleSort(e.target.value, filterOptions.sortOrder)}
+      >
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+      </select>
+      <select
+        value={filterOptions.sortOrder}
+        onChange={(e) => handleSort(filterOptions.sortBy, e.target.value)}
+      >
+        <option value="desc">Descending</option>
+        <option value="asc">Ascending</option>
+      </select>
+      <button onClick={() => handleFilter({ ...filterOptions, categories: [] })}>
+        Clear category filter
+      </button>
+      <button onClick={() => handleFilter({ ...filterOptions, tags: [] })}>
+        Clear tag filter
+      </button>
+      <ul>
+        {filteredPosts.map((post) => (
+          <li key={post.id}>
+            <h2>{post.title}</h2>
+            <p>{post.content}</p>
+            <p>Category: {post.category}</p>
+            <p>Tags: {post.tags.join(', ')}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
