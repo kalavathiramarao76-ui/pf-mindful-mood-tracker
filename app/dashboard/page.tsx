@@ -104,48 +104,40 @@ const Page = () => {
   const pathname = usePathname();
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialCompleted, setIsTutorialCompleted] = useState(false);
-  const [layout, setLayout] = useState<Layout>({
-    moodTracker: { x: 0, y: 0, width: 300, height: 200 },
-    recommendations: { x: 300, y: 0, width: 300, height: 200 },
-    goals: { x: 0, y: 200, width: 300, height: 200 },
-    community: { x: 300, y: 200, width: 300, height: 200 },
-    settings: { x: 0, y: 400, width: 300, height: 200 },
-  });
 
-  const handleDragEnd = (event: any) => {
-    const { id, x, y } = event;
-    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x, y, width: prevLayout[id].width, height: prevLayout[id].height } }));
-  };
+  const memoizedComponents = useMemo(() => components, []);
 
-  const handleResize = (id: string, width: number, height: number) => {
-    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x: prevLayout[id].x, y: prevLayout[id].y, width, height } }));
-  };
+  const handleTutorialStep = useCallback((step: number) => {
+    setCurrentStep(step);
+  }, []);
+
+  const handleTutorialCompletion = useCallback(() => {
+    setIsTutorialCompleted(true);
+  }, []);
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <SortableContext items={Object.keys(layout)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
-          {Object.keys(layout).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                top: layout[id].y,
-                left: layout[id].x,
-                width: layout[id].width,
-                height: layout[id].height,
-                border: '1px solid black',
-                resize: 'both',
-                overflow: 'auto',
-              }}
-              onResize={(e) => handleResize(id, e.target.offsetWidth, e.target.offsetHeight)}
-            >
-              {components[id as keyof typeof components]}
-            </div>
+    <DashboardLayout>
+      <DndContext collisionDetection={closestCenter}>
+        <SortableContext items={Object.keys(memoizedComponents)} strategy={rectSortingStrategy}>
+          {Object.keys(memoizedComponents).map((key, index) => (
+            <div key={key}>{memoizedComponents[key]}</div>
           ))}
-        </DashboardLayout>
-      </SortableContext>
-    </DndContext>
+        </SortableContext>
+        <DragOverlay />
+      </DndContext>
+      {tutorialSteps.map((step, index) => (
+        <div key={index}>
+          <h2>{step.title}</h2>
+          <p>{step.description}</p>
+          {index < tutorialSteps.length - 1 && (
+            <button onClick={() => handleTutorialStep(index + 1)}>Next</button>
+          )}
+          {index === tutorialSteps.length - 1 && (
+            <button onClick={handleTutorialCompletion}>Finish</button>
+          )}
+        </div>
+      ))}
+    </DashboardLayout>
   );
 };
 

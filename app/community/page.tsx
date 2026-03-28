@@ -80,108 +80,30 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
+      setPageNumber(pageNumber + 1);
       setLoading(false);
+      setIsFetching(false);
     };
-    fetchPosts();
-  }, [pageNumber, loading]);
 
-  useEffect(() => {
-    const filterPosts = () => {
-      const filtered = posts.filter((post) => {
-        const categoryMatch = filterOptions.categories.length === 0 || filterOptions.categories.includes(post.category);
-        const tagMatch = filterOptions.tags.length === 0 || filterOptions.tags.some((tag) => post.tags.includes(tag));
-        const searchMatch = post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase());
-        return categoryMatch && tagMatch && searchMatch;
-      });
-      setFilteredPosts(filtered);
-    };
-    filterPosts();
-  }, [posts, filterOptions]);
-
-  const handleCategoryChange = (category) => {
-    if (filterOptions.categories.includes(category)) {
-      setFilterOptions((prevOptions) => ({
-        ...prevOptions,
-        categories: prevOptions.categories.filter((cat) => cat !== category),
-      }));
-    } else {
-      setFilterOptions((prevOptions) => ({
-        ...prevOptions,
-        categories: [...prevOptions.categories, category],
-      }));
+    if (isFetching) {
+      fetchPosts();
     }
-  };
-
-  const handleTagChange = (tag) => {
-    if (filterOptions.tags.includes(tag)) {
-      setFilterOptions((prevOptions) => ({
-        ...prevOptions,
-        tags: prevOptions.tags.filter((t) => t !== tag),
-      }));
-    } else {
-      setFilterOptions((prevOptions) => ({
-        ...prevOptions,
-        tags: [...prevOptions.tags, tag],
-      }));
-    }
-  };
-
-  const handleSearchQueryChange = (query) => {
-    setFilterOptions((prevOptions) => ({
-      ...prevOptions,
-      searchQuery: query,
-    }));
-  };
+  }, [isFetching, pageNumber, loading]);
 
   return (
     <div>
-      <h1>Community Page</h1>
-      <div>
-        <label>Categories:</label>
-        <ul>
-          {categories.map((category) => (
-            <li key={category}>
-              <input
-                type="checkbox"
-                checked={filterOptions.categories.includes(category)}
-                onChange={() => handleCategoryChange(category)}
-              />
-              <span>{category}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div>
-        <label>Tags:</label>
-        <ul>
-          {tags.map((tag) => (
-            <li key={tag}>
-              <input
-                type="checkbox"
-                checked={filterOptions.tags.includes(tag)}
-                onChange={() => handleTagChange(tag)}
-              />
-              <span>{tag}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div>
-        <label>Search Query:</label>
-        <input
-          type="text"
-          value={filterOptions.searchQuery}
-          onChange={(e) => handleSearchQueryChange(e.target.value)}
-        />
-      </div>
-      <div>
-        {filteredPosts.map((post) => (
-          <div key={post.id}>
-            <h2>{post.title}</h2>
-            <p>{post.content}</p>
-          </div>
-        ))}
-      </div>
+      {posts.map((post) => (
+        <div key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
+        </div>
+      ))}
+      {loading && (
+        <div>Loading...</div>
+      )}
+      {isFetching && (
+        <div>Loading more posts...</div>
+      )}
     </div>
   );
 }
