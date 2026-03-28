@@ -106,54 +106,64 @@ const components = {
   settings: <MemoizedSettings />,
 };
 
-const Page = () => {
-  const router = useRouter();
-  const pathname = usePathname();
+const App = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isTutorialCompleted, setIsTutorialCompleted] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(true);
 
   const handleNextStep = () => {
     if (currentStep < tutorialSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      setIsTutorialCompleted(true);
-    }
-  };
-
-  const handlePrevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      setShowTutorial(false);
     }
   };
 
   const handleSkipTutorial = () => {
-    setIsTutorialCompleted(true);
+    setShowTutorial(false);
   };
 
-  if (isTutorialCompleted) {
-    return (
-      <DashboardLayout>
-        <DndContext collisionDetection={closestCenter}>
-          <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
-            {Object.keys(components).map((key) => (
-              <div key={key}>{components[key]}</div>
-            ))}
-          </SortableContext>
-        </DndContext>
-      </DashboardLayout>
-    );
-  }
-
   return (
-    <div>
-      <h1>{tutorialSteps[currentStep].title}</h1>
-      <p>{tutorialSteps[currentStep].description}</p>
-      <button onClick={handleNextStep}>Next</button>
-      <button onClick={handlePrevStep}>Previous</button>
-      <button onClick={handleSkipTutorial}>Skip Tutorial</button>
-      {tutorialSteps[currentStep].action()}
-    </div>
+    <DashboardLayout>
+      {showTutorial && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              padding: '20px',
+              borderRadius: '10px',
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h2>{tutorialSteps[currentStep].title}</h2>
+            <p>{tutorialSteps[currentStep].description}</p>
+            <button onClick={handleNextStep}>Next</button>
+            <button onClick={handleSkipTutorial}>Skip</button>
+          </div>
+        </div>
+      )}
+      <DndContext collisionDetection={closestCenter}>
+        <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
+          {Object.keys(components).map((key, index) => (
+            <div key={key} style={{ width: '100%', height: '100%' }}>
+              {components[key]}
+            </div>
+          ))}
+        </SortableContext>
+      </DndContext>
+    </DashboardLayout>
   );
 };
 
-export default Page;
+export default App;
