@@ -102,36 +102,59 @@ const components = {
 const Page = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isTutorialCompleted, setIsTutorialCompleted] = useState(false);
 
   const handleDragEnd = (event: any) => {
     // Handle drag end event
   };
 
+  const handleTutorialNext = () => {
+    if (currentStep < tutorialSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      setIsTutorialCompleted(true);
+    }
+  };
+
+  const handleTutorialSkip = () => {
+    setIsTutorialCompleted(true);
+  };
+
+  useEffect(() => {
+    const storedTutorialStatus = localStorage.getItem('tutorialCompleted');
+    if (storedTutorialStatus === 'true') {
+      setIsTutorialCompleted(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isTutorialCompleted) {
+      localStorage.setItem('tutorialCompleted', 'true');
+    }
+  }, [isTutorialCompleted]);
+
   return (
     <DashboardLayout>
-      <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={['moodTracker', 'recommendations', 'goals', 'community', 'settings']} strategy={rectSortingStrategy}>
-          <div className="dashboard-container">
-            <div className="section-header">Track Your Progress</div>
-            <div className="section-container">
-              {components.moodTracker}
-              {components.goals}
-            </div>
-            <div className="section-header">Personalized Recommendations</div>
-            <div className="section-container">
-              {components.recommendations}
-            </div>
-            <div className="section-header">Connect with Others</div>
-            <div className="section-container">
-              {components.community}
-            </div>
-            <div className="section-header">Settings</div>
-            <div className="section-container">
-              {components.settings}
-            </div>
+      {isTutorialCompleted ? (
+        <DndContext onDragEnd={handleDragEnd}>
+          <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
+            {Object.keys(components).map((component, index) => (
+              <div key={component}>{components[component]}</div>
+            ))}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <div className="tutorial-container">
+          <div className="tutorial-step">
+            <h2>{tutorialSteps[currentStep].title}</h2>
+            <p>{tutorialSteps[currentStep].description}</p>
+            <button onClick={handleTutorialNext}>Next</button>
+            <button onClick={handleTutorialSkip}>Skip</button>
           </div>
-        </SortableContext>
-      </DndContext>
+          <div className="tutorial-overlay" />
+        </div>
+      )}
     </DashboardLayout>
   );
 };

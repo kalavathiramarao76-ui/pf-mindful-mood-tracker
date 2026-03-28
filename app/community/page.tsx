@@ -80,113 +80,34 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
+      setPageNumber(pageNumber + 1);
       setLoading(false);
+      setIsFetching(false);
     };
-    fetchPosts();
-  }, [pageNumber]);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    const filtered = posts.filter((post) => {
-      const postContent = post.content.toLowerCase();
-      const queryLower = query.toLowerCase();
-      return postContent.includes(queryLower);
-    });
-    setFilteredPosts(filtered);
-  };
-
-  const handleFilter = (options: any) => {
-    setFilterOptions(options);
-    const filtered = posts.filter((post) => {
-      const postCategory = post.category;
-      const postTags = post.tags;
-      const { category, tags, searchQuery, sortBy, sortOrder } = options;
-      let match = true;
-      if (category && postCategory !== category) {
-        match = false;
-      }
-      if (tags.length > 0 && !tags.every((tag: string) => postTags.includes(tag))) {
-        match = false;
-      }
-      if (searchQuery && !post.content.toLowerCase().includes(searchQuery.toLowerCase())) {
-        match = false;
-      }
-      return match;
-    });
-    const sorted = filtered.sort((a: any, b: any) => {
-      if (options.sortBy === 'newest') {
-        return b.createdAt - a.createdAt;
-      } else if (options.sortBy === 'oldest') {
-        return a.createdAt - b.createdAt;
-      } else if (options.sortBy === 'mostReactions') {
-        return b.reactions.length - a.reactions.length;
-      } else if (options.sortBy === 'mostComments') {
-        return b.comments.length - a.comments.length;
-      }
-      return 0;
-    });
-    setFilteredPosts(sorted);
-  };
-
-  const handleSort = (sort: string) => {
-    setSortOrder(sort);
-    const sorted = filteredPosts.sort((a: any, b: any) => {
-      if (sort === 'newest') {
-        return b.createdAt - a.createdAt;
-      } else if (sort === 'oldest') {
-        return a.createdAt - b.createdAt;
-      } else if (sort === 'mostReactions') {
-        return b.reactions.length - a.reactions.length;
-      } else if (sort === 'mostComments') {
-        return b.comments.length - a.comments.length;
-      }
-      return 0;
-    });
-    setFilteredPosts(sorted);
-  };
+    if (isFetching) {
+      fetchPosts();
+    }
+  }, [isFetching, pageNumber, loading]);
 
   return (
     <div>
-      <input
-        type="search"
-        value={searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
-        placeholder="Search posts"
-      />
-      <select
-        value={filterOptions.category}
-        onChange={(e) => handleFilter({ ...filterOptions, category: e.target.value })}
-      >
-        <option value="">All categories</option>
-        {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-      </select>
-      <select
-        multiple
-        value={filterOptions.tags}
-        onChange={(e) => handleFilter({ ...filterOptions, tags: Array.from(e.target.selectedOptions, (option) => option.value) })}
-      >
-        {tags.map((tag) => (
-          <option key={tag} value={tag}>
-            {tag}
-          </option>
-        ))}
-      </select>
-      <button onClick={() => handleSort('newest')}>Newest</button>
-      <button onClick={() => handleSort('oldest')}>Oldest</button>
-      <button onClick={() => handleSort('mostReactions')}>Most Reactions</button>
-      <button onClick={() => handleSort('mostComments')}>Most Comments</button>
-      {filteredPosts.map((post) => (
+      {posts.map((post) => (
         <div key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.content}</p>
-          <p>Reactions: {post.reactions.length}</p>
-          <p>Comments: {post.comments.length}</p>
         </div>
       ))}
+      {loading && (
+        <div>
+          <p>Loading...</p>
+        </div>
+      )}
+      {hasMorePosts && !loading && (
+        <div>
+          <p>Loading more posts...</p>
+        </div>
+      )}
     </div>
   );
 }
