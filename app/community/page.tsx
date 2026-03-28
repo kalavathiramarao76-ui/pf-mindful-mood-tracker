@@ -80,34 +80,122 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
-      setPageNumber((prevPageNumber) => prevPageNumber + 1);
       setLoading(false);
-      setIsFetching(false);
     };
+    fetchPosts();
+  }, [pageNumber]);
 
-    if (isFetching) {
-      fetchPosts();
-    }
-  }, [isFetching, pageNumber, loading]);
+  const handleSearch = async () => {
+    const filteredData = await getCommunityPosts(1, filterOptions);
+    setPosts(filteredData);
+    setFilteredPosts(filteredData);
+    const postIds = filteredData.map((post) => post.id);
+    const reactions = await Promise.all(postIds.map((id) => getPostReactions(id)));
+    const comments = await Promise.all(postIds.map((id) => getPostComments(id)));
+    const reactionsMap = {};
+    const commentsMap = {};
+    postIds.forEach((id, index) => {
+      reactionsMap[id] = reactions[index];
+      commentsMap[id] = comments[index];
+    });
+    setPostReactions(reactionsMap);
+    setPostComments(commentsMap);
+  };
+
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
+    setFilterOptions((prevOptions) => ({ ...prevOptions, [name]: value }));
+  };
+
+  const handleSortChange = (event) => {
+    const { name, value } = event.target;
+    setFilterOptions((prevOptions) => ({ ...prevOptions, [name]: value }));
+  };
+
+  const handleCategoryChange = (event) => {
+    const { name, value } = event.target;
+    setFilterOptions((prevOptions) => ({ ...prevOptions, categories: [value] }));
+  };
+
+  const handleTagChange = (event) => {
+    const { name, value } = event.target;
+    setFilterOptions((prevOptions) => ({ ...prevOptions, tags: [value] }));
+  };
+
+  const handleSearchQueryChange = (event) => {
+    const { name, value } = event.target;
+    setFilterOptions((prevOptions) => ({ ...prevOptions, searchQuery: value }));
+  };
 
   return (
     <div>
-      {posts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-        </div>
-      ))}
-      {loading && (
-        <div>
-          <p>Loading...</p>
-        </div>
-      )}
-      {hasMorePosts && !loading && (
-        <div>
-          <p>Scroll to load more...</p>
-        </div>
-      )}
+      <h1>Community Page</h1>
+      <form>
+        <input
+          type="search"
+          name="searchQuery"
+          value={filterOptions.searchQuery}
+          onChange={handleSearchQueryChange}
+          placeholder="Search posts"
+        />
+        <select
+          name="categories"
+          value={filterOptions.categories}
+          onChange={handleCategoryChange}
+        >
+          <option value="">All categories</option>
+          {categories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+        <select
+          name="tags"
+          value={filterOptions.tags}
+          onChange={handleTagChange}
+        >
+          <option value="">All tags</option>
+          {tags.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
+            </option>
+          ))}
+        </select>
+        <select
+          name="sortBy"
+          value={filterOptions.sortBy}
+          onChange={handleSortChange}
+        >
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+        </select>
+        <select
+          name="sortOrder"
+          value={filterOptions.sortOrder}
+          onChange={handleSortChange}
+        >
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+        <button type="button" onClick={handleSearch}>
+          Search
+        </button>
+      </form>
+      <ul>
+        {filteredPosts.map((post) => (
+          <li key={post.id}>
+            <h2>{post.title}</h2>
+            <p>{post.content}</p>
+            <p>
+              {postReactions[post.id] && postReactions[post.id].length} reactions
+            </p>
+            <p>
+              {postComments[post.id] && postComments[post.id].length} comments
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
