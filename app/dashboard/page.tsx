@@ -103,17 +103,34 @@ const Page = () => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const handleDragEnd = (event: any) => {
+    // Handle drag end event
+  };
+
   return (
     <DashboardLayout>
       <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={items} strategy={rectSortingStrategy}>
-          {components.map((component, index) => (
-            <div key={index}>{component}</div>
-          ))}
+        <SortableContext items={['moodTracker', 'recommendations', 'goals', 'community', 'settings']} strategy={rectSortingStrategy}>
+          <div className="dashboard-container">
+            <div className="section-header">Track Your Progress</div>
+            <div className="section-container">
+              {components.moodTracker}
+              {components.goals}
+            </div>
+            <div className="section-header">Personalized Recommendations</div>
+            <div className="section-container">
+              {components.recommendations}
+            </div>
+            <div className="section-header">Connect with Others</div>
+            <div className="section-container">
+              {components.community}
+            </div>
+            <div className="section-header">Settings</div>
+            <div className="section-container">
+              {components.settings}
+            </div>
+          </div>
         </SortableContext>
-        <DragOverlay>
-          {activeId ? <div>{components[activeId]}</div> : null}
-        </DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
