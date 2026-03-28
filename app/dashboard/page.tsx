@@ -104,41 +104,47 @@ const Page = () => {
   const pathname = usePathname();
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialCompleted, setIsTutorialCompleted] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(true);
 
-  const memoizedComponents = useMemo(() => components, []);
+  const handleNextStep = () => {
+    if (currentStep < tutorialSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      setIsTutorialCompleted(true);
+      setShowTutorial(false);
+    }
+  };
 
-  const handleTutorialStep = useCallback((step: number) => {
-    setCurrentStep(step);
-  }, []);
-
-  const handleTutorialCompletion = useCallback(() => {
+  const handleSkipTutorial = () => {
     setIsTutorialCompleted(true);
-  }, []);
+    setShowTutorial(false);
+  };
+
+  if (showTutorial) {
+    return (
+      <div className="tutorial-overlay">
+        <div className="tutorial-container">
+          <h2>{tutorialSteps[currentStep].title}</h2>
+          <p>{tutorialSteps[currentStep].description}</p>
+          <button onClick={handleNextStep}>Next</button>
+          <button onClick={handleSkipTutorial}>Skip Tutorial</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout>
       <DndContext collisionDetection={closestCenter}>
-        <SortableContext items={Object.keys(memoizedComponents)} strategy={rectSortingStrategy}>
-          {Object.keys(memoizedComponents).map((key, index) => (
-            <React.Fragment key={key}>
-              {memoizedComponents[key]}
-            </React.Fragment>
+        <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
+          {Object.keys(components).map((key, index) => (
+            <div key={key} style={{ position: 'absolute', top: index * 100, left: 0 }}>
+              {components[key]}
+            </div>
           ))}
         </SortableContext>
         <DragOverlay />
       </DndContext>
-      {tutorialSteps.map((step, index) => (
-        <div key={step.title}>
-          {index === currentStep && (
-            <div>
-              <h2>{step.title}</h2>
-              <p>{step.description}</p>
-              <button onClick={() => handleTutorialStep(index + 1)}>Next</button>
-            </div>
-          )}
-        </div>
-      ))}
-      {isTutorialCompleted && <div>Tutorial completed!</div>}
     </DashboardLayout>
   );
 };
