@@ -104,42 +104,31 @@ const Page = () => {
   const pathname = usePathname();
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialCompleted, setIsTutorialCompleted] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(true);
 
-  const handleNextStep = () => {
-    if (currentStep < tutorialSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      setIsTutorialCompleted(true);
-      setShowTutorial(false);
-    }
+  const optimizedComponents = useMemo(() => {
+    const optimized = {};
+    Object.keys(components).forEach((key) => {
+      optimized[key] = React.memo(() => (
+        <Suspense fallback={<div>Loading...</div>}>
+          {components[key]}
+        </Suspense>
+      ));
+    });
+    return optimized;
+  }, [components]);
+
+  const renderComponent = (componentName: string) => {
+    const Component = optimizedComponents[componentName];
+    return <Component />;
   };
-
-  const handleSkipTutorial = () => {
-    setIsTutorialCompleted(true);
-    setShowTutorial(false);
-  };
-
-  if (showTutorial) {
-    return (
-      <div className="tutorial-overlay">
-        <div className="tutorial-container">
-          <h2>{tutorialSteps[currentStep].title}</h2>
-          <p>{tutorialSteps[currentStep].description}</p>
-          <button onClick={handleNextStep}>Next</button>
-          <button onClick={handleSkipTutorial}>Skip Tutorial</button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <DashboardLayout>
       <DndContext collisionDetection={closestCenter}>
-        <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
-          {Object.keys(components).map((key, index) => (
-            <div key={key} style={{ position: 'absolute', top: index * 100, left: 0 }}>
-              {components[key]}
+        <SortableContext items={Object.keys(optimizedComponents)} strategy={rectSortingStrategy}>
+          {Object.keys(optimizedComponents).map((componentName, index) => (
+            <div key={componentName}>
+              {renderComponent(componentName)}
             </div>
           ))}
         </SortableContext>

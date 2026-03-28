@@ -98,15 +98,13 @@ export default function CommunityPage() {
           <p>{post.content}</p>
         </div>
       ))}
-      {loading && (
+      {isFetching && (
         <div>
           <p>Loading...</p>
         </div>
       )}
-      {hasMorePosts && !loading && (
-        <div>
-          <p>Load more...</p>
-        </div>
+      {hasMorePosts && !isFetching && (
+        <button onClick={() => setIsFetching(true)}>Load More</button>
       )}
     </div>
   );
