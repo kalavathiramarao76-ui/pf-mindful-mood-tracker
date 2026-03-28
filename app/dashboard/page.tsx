@@ -104,57 +104,75 @@ const Page = () => {
   const pathname = usePathname();
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialCompleted, setIsTutorialCompleted] = useState(false);
+  const [isTutorialActive, setIsTutorialActive] = useState(true);
 
-  const handleDragEnd = (event: any) => {
-    // Handle drag end event
-  };
-
-  const handleTutorialNext = () => {
+  const handleNextStep = () => {
     if (currentStep < tutorialSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
       setIsTutorialCompleted(true);
+      setIsTutorialActive(false);
     }
   };
 
-  const handleTutorialSkip = () => {
+  const handleSkipTutorial = () => {
     setIsTutorialCompleted(true);
+    setIsTutorialActive(false);
   };
 
   useEffect(() => {
     const storedTutorialStatus = localStorage.getItem('tutorialCompleted');
     if (storedTutorialStatus === 'true') {
       setIsTutorialCompleted(true);
+      setIsTutorialActive(false);
     }
   }, []);
 
-  useEffect(() => {
-    if (isTutorialCompleted) {
-      localStorage.setItem('tutorialCompleted', 'true');
-    }
-  }, [isTutorialCompleted]);
+  const tutorialOverlay = (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '10px',
+          boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+        }}
+      >
+        <h2>{tutorialSteps[currentStep].title}</h2>
+        <p>{tutorialSteps[currentStep].description}</p>
+        <button onClick={handleNextStep}>Next</button>
+        <button onClick={handleSkipTutorial}>Skip Tutorial</button>
+      </div>
+    </div>
+  );
 
   return (
     <DashboardLayout>
-      {isTutorialCompleted ? (
-        <DndContext onDragEnd={handleDragEnd}>
-          <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
-            {Object.keys(components).map((component, index) => (
-              <div key={component}>{components[component]}</div>
-            ))}
-          </SortableContext>
-        </DndContext>
-      ) : (
-        <div className="tutorial-container">
-          <div className="tutorial-step">
-            <h2>{tutorialSteps[currentStep].title}</h2>
-            <p>{tutorialSteps[currentStep].description}</p>
-            <button onClick={handleTutorialNext}>Next</button>
-            <button onClick={handleTutorialSkip}>Skip</button>
-          </div>
-          <div className="tutorial-overlay" />
-        </div>
-      )}
+      {isTutorialActive && tutorialOverlay}
+      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+        <SortableContext items={items} strategy={rectSortingStrategy}>
+          {components.moodTracker}
+          {components.recommendations}
+          {components.goals}
+          {components.community}
+          {components.settings}
+        </SortableContext>
+        <DragOverlay>{activeId ? <div>Dragging {activeId}</div> : null}</DragOverlay>
+      </DndContext>
     </DashboardLayout>
   );
 };
