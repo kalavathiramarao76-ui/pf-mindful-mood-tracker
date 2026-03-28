@@ -85,83 +85,40 @@ export default function CommunityPage() {
     fetchPosts();
   }, [pageNumber]);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    const filtered = posts.filter((post) => {
-      const title = post.title.toLowerCase();
-      const content = post.content.toLowerCase();
-      const category = post.category.toLowerCase();
-      const tags = post.tags.map((tag) => tag.toLowerCase());
-      return (
-        title.includes(query.toLowerCase()) ||
-        content.includes(query.toLowerCase()) ||
-        category.includes(query.toLowerCase()) ||
-        tags.some((tag) => tag.includes(query.toLowerCase()))
-      );
-    });
-    setFilteredPosts(filtered);
+    const filteredData = await filterPosts(query, filterOptions);
+    setFilteredPosts(filteredData);
   };
 
-  const handleFilter = (options: any) => {
-    setFilterOptions(options);
-    const filtered = posts.filter((post) => {
-      const category = post.category;
-      const tags = post.tags;
-      const title = post.title.toLowerCase();
-      const content = post.content.toLowerCase();
-      const query = options.searchQuery.toLowerCase();
-      const categories = options.categories;
-      const selectedTags = options.tags;
-      const sortBy = options.sortBy;
-      const sortOrder = options.sortOrder;
+  const handleFilterChange = (key: string, value: any) => {
+    setFilterOptions((prevOptions) => ({ ...prevOptions, [key]: value }));
+    const filteredData = filterPosts(searchQuery, { ...filterOptions, [key]: value });
+    setFilteredPosts(filteredData);
+  };
 
-      let isValid = true;
+  const filterPosts = async (query: string, options: any) => {
+    const filteredData = posts.filter((post) => {
+      const categoryMatch = options.categories.length === 0 || options.categories.includes(post.category);
+      const tagMatch = options.tags.length === 0 || post.tags.some((tag) => options.tags.includes(tag));
+      const searchMatch = query === '' || post.content.toLowerCase().includes(query.toLowerCase());
+      const sortByMatch = options.sortBy === 'newest' ? post.createdAt : post[options.sortBy];
+      const sortOrderMatch = options.sortOrder === 'desc' ? sortByMatch >= options.sortBy : sortByMatch <= options.sortBy;
+      return categoryMatch && tagMatch && searchMatch && sortOrderMatch;
+    });
+    return filteredData;
+  };
 
-      if (options.searchQuery) {
-        isValid =
-          title.includes(query) ||
-          content.includes(query) ||
-          category.includes(query) ||
-          tags.some((tag) => tag.toLowerCase().includes(query));
-      }
-
-      if (options.categories.length > 0) {
-        isValid = isValid && options.categories.includes(category);
-      }
-
-      if (options.tags.length > 0) {
-        isValid = isValid && selectedTags.some((tag) => tags.includes(tag));
-      }
-
+  const handleSortChange = (sortBy: string) => {
+    setSortOrder(sortBy);
+    const sortedData = filteredPosts.sort((a, b) => {
       if (sortBy === 'newest') {
-        const date = new Date(post.createdAt);
-        const now = new Date();
-        const diff = now.getTime() - date.getTime();
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        if (sortOrder === 'desc') {
-          isValid = isValid && days <= 30;
-        } else {
-          isValid = isValid && days >= 30;
-        }
-      }
-
-      return isValid;
-    });
-    setFilteredPosts(filtered);
-  };
-
-  const handleSort = (sortOrder: string) => {
-    setSortOrder(sortOrder);
-    const sorted = filteredPosts.sort((a, b) => {
-      if (sortOrder === 'newest') {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      } else if (sortOrder === 'oldest') {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return b.createdAt - a.createdAt;
       } else {
-        return 0;
+        return a[sortBy] - b[sortBy];
       }
     });
-    setFilteredPosts(sorted);
+    setFilteredPosts(sortedData);
   };
 
   return (
@@ -173,21 +130,33 @@ export default function CommunityPage() {
         placeholder="Search posts"
       />
       <select
-        value={sortOrder}
-        onChange={(e) => handleSort(e.target.value)}
+        value={filterOptions.sortBy}
+        onChange={(e) => handleFilterChange('sortBy', e.target.value)}
       >
         <option value="newest">Newest</option>
         <option value="oldest">Oldest</option>
+        <option value="mostReactions">Most Reactions</option>
+        <option value="mostComments">Most Comments</option>
       </select>
-      <button onClick={() => handleFilter(filterOptions)}>Filter</button>
-      {filteredPosts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-          <p>Category: {post.category}</p>
-          <p>Tags: {post.tags.join(', ')}</p>
-        </div>
-      ))}
+      <select
+        value={filterOptions.sortOrder}
+        onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
+      >
+        <option value="desc">Descending</option>
+        <option value="asc">Ascending</option>
+      </select>
+      <ul>
+        {filteredPosts.map((post) => (
+          <li key={post.id}>
+            <h2>{post.title}</h2>
+            <p>{post.content}</p>
+            <p>Category: {post.category}</p>
+            <p>Tags: {post.tags.join(', ')}</p>
+            <p>Reactions: {postReactions[post.id].length}</p>
+            <p>Comments: {postComments[post.id].length}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
