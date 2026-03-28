@@ -80,32 +80,88 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
-      setPageNumber(pageNumber + 1);
       setLoading(false);
-      setIsFetching(false);
     };
+    fetchPosts();
+  }, [pageNumber]);
 
-    if (isFetching) {
-      fetchPosts();
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    const filteredData = await filterPosts(query, filterOptions);
+    setFilteredPosts(filteredData);
+  };
+
+  const handleFilterChange = (filter: string, value: any) => {
+    setFilterOptions((prevFilters) => ({ ...prevFilters, [filter]: value }));
+    const filteredData = filterPosts(searchQuery, { ...filterOptions, [filter]: value });
+    setFilteredPosts(filteredData);
+  };
+
+  const filterPosts = async (query: string, filters: any) => {
+    const data = await getCommunityPosts(pageNumber);
+    const filteredData = data.filter((post) => {
+      const categoryMatch = filters.category ? post.category === filters.category : true;
+      const tagMatch = filters.tags.length ? filters.tags.some((tag) => post.tags.includes(tag)) : true;
+      const searchMatch = query ? post.content.toLowerCase().includes(query.toLowerCase()) : true;
+      return categoryMatch && tagMatch && searchMatch;
+    });
+    if (filters.sortBy === 'newest') {
+      filteredData.sort((a, b) => b.createdAt - a.createdAt);
+    } else if (filters.sortBy === 'oldest') {
+      filteredData.sort((a, b) => a.createdAt - b.createdAt);
     }
-  }, [isFetching, pageNumber, loading]);
+    return filteredData;
+  };
+
+  const handleSortChange = (sortOrder: string) => {
+    setSortOrder(sortOrder);
+    const sortedData = [...filteredPosts];
+    if (sortOrder === 'newest') {
+      sortedData.sort((a, b) => b.createdAt - a.createdAt);
+    } else if (sortOrder === 'oldest') {
+      sortedData.sort((a, b) => a.createdAt - b.createdAt);
+    }
+    setFilteredPosts(sortedData);
+  };
 
   return (
     <div>
-      {posts.map((post) => (
+      <input
+        type="search"
+        value={searchQuery}
+        onChange={(e) => handleSearch(e.target.value)}
+        placeholder="Search posts"
+      />
+      <select
+        value={filterOptions.category}
+        onChange={(e) => handleFilterChange('category', e.target.value)}
+      >
+        <option value="">All categories</option>
+        {categories.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
+      </select>
+      <select
+        multiple
+        value={filterOptions.tags}
+        onChange={(e) => handleFilterChange('tags', Array.from(e.target.selectedOptions, (option) => option.value))}
+      >
+        {tags.map((tag) => (
+          <option key={tag} value={tag}>
+            {tag}
+          </option>
+        ))}
+      </select>
+      <button onClick={() => handleSortChange('newest')}>Newest</button>
+      <button onClick={() => handleSortChange('oldest')}>Oldest</button>
+      {filteredPosts.map((post) => (
         <div key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.content}</p>
         </div>
       ))}
-      {isFetching && (
-        <div>
-          <p>Loading...</p>
-        </div>
-      )}
-      {hasMorePosts && !isFetching && (
-        <button onClick={() => setIsFetching(true)}>Load More</button>
-      )}
     </div>
   );
 }

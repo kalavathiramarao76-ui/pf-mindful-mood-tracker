@@ -105,34 +105,31 @@ const Page = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialCompleted, setIsTutorialCompleted] = useState(false);
 
-  const optimizedComponents = useMemo(() => {
-    const optimized = {};
-    Object.keys(components).forEach((key) => {
-      optimized[key] = React.memo(() => (
-        <Suspense fallback={<div>Loading...</div>}>
-          {components[key]}
-        </Suspense>
-      ));
-    });
-    return optimized;
-  }, [components]);
-
-  const renderComponent = (componentName: string) => {
-    const Component = optimizedComponents[componentName];
-    return <Component />;
+  const simplifiedComponents = {
+    primary: [
+      <LazyMoodTracker key="moodTracker" />,
+      <LazyRecommendations key="recommendations" />,
+    ],
+    secondary: [
+      <LazyGoals key="goals" />,
+      <LazyCommunity key="community" />,
+      <LazySettings key="settings" />,
+    ],
   };
 
   return (
     <DashboardLayout>
       <DndContext collisionDetection={closestCenter}>
-        <SortableContext items={Object.keys(optimizedComponents)} strategy={rectSortingStrategy}>
-          {Object.keys(optimizedComponents).map((componentName, index) => (
-            <div key={componentName}>
-              {renderComponent(componentName)}
-            </div>
+        <SortableContext items={Object.keys(simplifiedComponents.primary)} strategy={rectSortingStrategy}>
+          {simplifiedComponents.primary.map((component, index) => (
+            <div key={index}>{component}</div>
           ))}
         </SortableContext>
-        <DragOverlay />
+        <SortableContext items={Object.keys(simplifiedComponents.secondary)} strategy={rectSortingStrategy}>
+          {simplifiedComponents.secondary.map((component, index) => (
+            <div key={index}>{component}</div>
+          ))}
+        </SortableContext>
       </DndContext>
     </DashboardLayout>
   );
