@@ -80,33 +80,96 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
-      setPageNumber(pageNumber + 1);
       setLoading(false);
       setIsFetching(false);
     };
-    if (isFetching) {
-      fetchPosts();
+    fetchPosts();
+  }, [pageNumber, loading]);
+
+  const handleFilterChange = (key, value) => {
+    setFilterOptions((prevOptions) => ({ ...prevOptions, [key]: value }));
+    applyFilters();
+  };
+
+  const applyFilters = () => {
+    const filteredPosts = posts.filter((post) => {
+      const categoryMatch = filterOptions.categories.length === 0 || filterOptions.categories.includes(post.category);
+      const tagMatch = filterOptions.tags.length === 0 || filterOptions.tags.some((tag) => post.tags.includes(tag));
+      const searchMatch = filterOptions.searchQuery === '' || post.content.toLowerCase().includes(filterOptions.searchQuery.toLowerCase());
+      return categoryMatch && tagMatch && searchMatch;
+    });
+    setFilteredPosts(filteredPosts);
+  };
+
+  const handleCategoryChange = (category) => {
+    if (filterOptions.categories.includes(category)) {
+      setFilterOptions((prevOptions) => ({ ...prevOptions, categories: prevOptions.categories.filter((c) => c !== category) }));
+    } else {
+      setFilterOptions((prevOptions) => ({ ...prevOptions, categories: [...prevOptions.categories, category] }));
     }
-  }, [isFetching, pageNumber, loading]);
+    applyFilters();
+  };
+
+  const handleTagChange = (tag) => {
+    if (filterOptions.tags.includes(tag)) {
+      setFilterOptions((prevOptions) => ({ ...prevOptions, tags: prevOptions.tags.filter((t) => t !== tag) }));
+    } else {
+      setFilterOptions((prevOptions) => ({ ...prevOptions, tags: [...prevOptions.tags, tag] }));
+    }
+    applyFilters();
+  };
+
+  const handleSearchQueryChange = (query) => {
+    setFilterOptions((prevOptions) => ({ ...prevOptions, searchQuery: query }));
+    applyFilters();
+  };
 
   return (
     <div>
-      {posts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-        </div>
-      ))}
-      {loading && (
-        <div>
-          <p>Loading...</p>
-        </div>
-      )}
-      {!hasMorePosts && (
-        <div>
-          <p>No more posts to load.</p>
-        </div>
-      )}
+      <h1>Community Page</h1>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => handleSearchQueryChange(e.target.value)}
+        placeholder="Search posts"
+      />
+      <select
+        value={selectedCategory}
+        onChange={(e) => handleCategoryChange(e.target.value)}
+      >
+        <option value="">All categories</option>
+        {categories.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
+      </select>
+      <div>
+        {tags.map((tag) => (
+          <button
+            key={tag}
+            onClick={() => handleTagChange(tag)}
+            style={{
+              backgroundColor: filterOptions.tags.includes(tag) ? 'blue' : 'gray',
+              color: 'white',
+            }}
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+      <button onClick={() => handleFilterChange('sortBy', 'newest')}>Newest</button>
+      <button onClick={() => handleFilterChange('sortBy', 'oldest')}>Oldest</button>
+      <ul>
+        {filteredPosts.map((post) => (
+          <li key={post.id}>
+            <h2>{post.title}</h2>
+            <p>{post.content}</p>
+            <p>Category: {post.category}</p>
+            <p>Tags: {post.tags.join(', ')}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -110,29 +110,41 @@ const initialLayout: Layout = {
 
 const Page = () => {
   const [layout, setLayout] = useState(initialLayout);
-  const [activeComponent, setActiveComponent] = useState('moodTracker');
 
-  const handleComponentLoad = (component: string) => {
-    const Component = components[component];
-    return (
-      <Suspense fallback={<div>Loading...</div>}>
-        <Component />
-      </Suspense>
-    );
+  const handleDragEnd = (event: any) => {
+    const { id, x, y } = event;
+    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x, y, width: prevLayout[id].width, height: prevLayout[id].height } }));
+  };
+
+  const handleResize = (id: string, width: number, height: number) => {
+    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x: prevLayout[id].x, y: prevLayout[id].y, width, height } }));
   };
 
   return (
-    <DashboardLayout>
-      <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={Object.keys(layout)} strategy={rectSortingStrategy}>
-          {Object.keys(layout).map((component, index) => (
-            <div key={component} style={{ position: 'absolute', left: layout[component].x, top: layout[component].y, width: layout[component].width, height: layout[component].height }}>
-              {handleComponentLoad(component)}
+    <DndContext onDragEnd={handleDragEnd}>
+      <SortableContext items={Object.keys(layout)} strategy={rectSortingStrategy}>
+        <DashboardLayout>
+          {Object.keys(layout).map((id) => (
+            <div
+              key={id}
+              style={{
+                position: 'absolute',
+                top: layout[id].y,
+                left: layout[id].x,
+                width: layout[id].width,
+                height: layout[id].height,
+                border: '1px solid black',
+                resize: 'both',
+                overflow: 'auto',
+              }}
+              onResize={(e) => handleResize(id, e.target.offsetWidth, e.target.offsetHeight)}
+            >
+              {components[id]}
             </div>
           ))}
-        </SortableContext>
-      </DndContext>
-    </DashboardLayout>
+        </DashboardLayout>
+      </SortableContext>
+    </DndContext>
   );
 };
 
