@@ -91,7 +91,7 @@ export default function CommunityPage() {
 
   return (
     <div>
-      {filteredPosts.map((post) => (
+      {posts.map((post) => (
         <div key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.content}</p>

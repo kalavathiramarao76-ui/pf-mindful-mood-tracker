@@ -109,67 +109,25 @@ const initialLayout: Layout = {
 };
 
 const Page = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [showTutorial, setShowTutorial] = useState(true);
+  const [layout, setLayout] = useState(initialLayout);
+  const [activeComponent, setActiveComponent] = useState('moodTracker');
 
-  const handleNextStep = () => {
-    if (currentStep < tutorialSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      setShowTutorial(false);
-    }
-  };
-
-  const handleSkipTutorial = () => {
-    setShowTutorial(false);
+  const handleComponentLoad = (component: string) => {
+    const Component = components[component];
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Component />
+      </Suspense>
+    );
   };
 
   return (
     <DashboardLayout>
-      {showTutorial && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              padding: '20px',
-              borderRadius: '10px',
-              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
-            }}
-          >
-            <h2>{tutorialSteps[currentStep].title}</h2>
-            <p>{tutorialSteps[currentStep].description}</p>
-            <button onClick={handleNextStep}>Next</button>
-            <button onClick={handleSkipTutorial}>Skip</button>
-          </div>
-        </div>
-      )}
       <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={Object.keys(initialLayout)} strategy={rectSortingStrategy}>
-          {Object.keys(initialLayout).map((key) => (
-            <div
-              key={key}
-              style={{
-                position: 'absolute',
-                top: initialLayout[key].y,
-                left: initialLayout[key].x,
-                width: initialLayout[key].width,
-                height: initialLayout[key].height,
-                border: '1px solid black',
-              }}
-            >
-              {components[key]}
+        <SortableContext items={Object.keys(layout)} strategy={rectSortingStrategy}>
+          {Object.keys(layout).map((component, index) => (
+            <div key={component} style={{ position: 'absolute', left: layout[component].x, top: layout[component].y, width: layout[component].width, height: layout[component].height }}>
+              {handleComponentLoad(component)}
             </div>
           ))}
         </SortableContext>
