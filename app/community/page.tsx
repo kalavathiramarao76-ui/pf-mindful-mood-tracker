@@ -102,9 +102,9 @@ export default function CommunityPage() {
           <p>Loading...</p>
         </div>
       )}
-      {hasMorePosts && !loading && (
+      {!hasMorePosts && (
         <div>
-          <p>Load more...</p>
+          <p>No more posts to load.</p>
         </div>
       )}
     </div>

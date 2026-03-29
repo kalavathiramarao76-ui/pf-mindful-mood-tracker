@@ -108,184 +108,74 @@ const initialLayout: Layout = {
   settings: { x: 0, y: 400, width: 300, height: 200 },
 };
 
-const initialComponents = {
-  moodTracker: {
-    id: 'moodTracker',
-    component: <LazyMoodTracker />,
-    removable: false,
-    resizable: true,
-  },
-  recommendations: {
-    id: 'recommendations',
-    component: <LazyRecommendations />,
-    removable: false,
-    resizable: true,
-  },
-  goals: {
-    id: 'goals',
-    component: <LazyGoals />,
-    removable: false,
-    resizable: true,
-  },
-  community: {
-    id: 'community',
-    component: <LazyCommunity />,
-    removable: false,
-    resizable: true,
-  },
-  settings: {
-    id: 'settings',
-    component: <LazySettings />,
-    removable: false,
-    resizable: true,
-  },
-};
+const Page = () => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(true);
 
-const initialDashboardConfig: DashboardConfig = {
-  layout: initialLayout,
-  components: initialComponents,
-  breakpoints: {},
-};
-
-const DashboardPage = () => {
-  const [activeComponent, setActiveComponent] = useState('moodTracker');
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [dashboardConfig, setDashboardConfig] = useState(initialDashboardConfig);
-
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      setDashboardConfig((prevConfig) => {
-        const newLayout = { ...prevConfig.layout };
-        const newComponents = { ...prevConfig.components };
-        const activeComponent = newComponents[active.id];
-        const overComponent = newComponents[over.id];
-        newLayout[active.id] = overComponent.layout;
-        newLayout[over.id] = activeComponent.layout;
-        return { ...prevConfig, layout: newLayout };
-      });
+  const handleNextStep = () => {
+    if (currentStep < tutorialSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      setShowTutorial(false);
     }
   };
 
-  const handleResize = (id: string, newDimensions: { width: number; height: number }) => {
-    setDashboardConfig((prevConfig) => {
-      const newLayout = { ...prevConfig.layout };
-      newLayout[id] = { ...newLayout[id], ...newDimensions };
-      return { ...prevConfig, layout: newLayout };
-    });
-  };
-
-  const handleRemove = (id: string) => {
-    setDashboardConfig((prevConfig) => {
-      const newComponents = { ...prevConfig.components };
-      delete newComponents[id];
-      const newLayout = { ...prevConfig.layout };
-      delete newLayout[id];
-      return { ...prevConfig, components: newComponents, layout: newLayout };
-    });
-  };
-
-  const handleAdd = (id: string) => {
-    setDashboardConfig((prevConfig) => {
-      const newComponents = { ...prevConfig.components };
-      newComponents[id] = {
-        id,
-        component: components[id],
-        removable: true,
-        resizable: true,
-      };
-      const newLayout = { ...prevConfig.layout };
-      newLayout[id] = { x: 0, y: 0, width: 300, height: 200 };
-      return { ...prevConfig, components: newComponents, layout: newLayout };
-    });
+  const handleSkipTutorial = () => {
+    setShowTutorial(false);
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
-          {Object.keys(dashboardConfig.components).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                left: dashboardConfig.layout[id].x,
-                top: dashboardConfig.layout[id].y,
-                width: dashboardConfig.layout[id].width,
-                height: dashboardConfig.layout[id].height,
-              }}
-            >
-              {dashboardConfig.components[id].component}
-              {dashboardConfig.components[id].resizable && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    width: 10,
-                    height: 10,
-                    backgroundColor: 'gray',
-                    cursor: 'nwse-resize',
-                  }}
-                  onMouseDown={(event) => {
-                    const rect = event.currentTarget.getBoundingClientRect();
-                    const startX = event.clientX;
-                    const startY = event.clientY;
-                    const startWidth = rect.width;
-                    const startHeight = rect.height;
-                    const handleMouseMove = (event: any) => {
-                      const newWidth = startWidth + (event.clientX - startX);
-                      const newHeight = startHeight + (event.clientY - startY);
-                      handleResize(id, { width: newWidth, height: newHeight });
-                    };
-                    const handleMouseUp = () => {
-                      document.removeEventListener('mousemove', handleMouseMove);
-                      document.removeEventListener('mouseup', handleMouseUp);
-                    };
-                    document.addEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mouseup', handleMouseUp);
-                  }}
-                />
-              )}
-              {dashboardConfig.components[id].removable && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    width: 10,
-                    height: 10,
-                    backgroundColor: 'red',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => handleRemove(id)}
-                >
-                  X
-                </div>
-              )}
-            </div>
-          ))}
+    <DashboardLayout>
+      {showTutorial && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <div
             style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              width: '100%',
-              padding: 10,
               backgroundColor: 'white',
-              border: '1px solid gray',
+              padding: '20px',
+              borderRadius: '10px',
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
             }}
           >
-            <button onClick={() => handleAdd('moodTracker')}>Add Mood Tracker</button>
-            <button onClick={() => handleAdd('recommendations')}>Add Recommendations</button>
-            <button onClick={() => handleAdd('goals')}>Add Goals</button>
-            <button onClick={() => handleAdd('community')}>Add Community</button>
-            <button onClick={() => handleAdd('settings')}>Add Settings</button>
+            <h2>{tutorialSteps[currentStep].title}</h2>
+            <p>{tutorialSteps[currentStep].description}</p>
+            <button onClick={handleNextStep}>Next</button>
+            <button onClick={handleSkipTutorial}>Skip</button>
           </div>
-        </DashboardLayout>
-      </SortableContext>
-    </DndContext>
+        </div>
+      )}
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={Object.keys(initialLayout)} strategy={rectSortingStrategy}>
+          {Object.keys(initialLayout).map((key) => (
+            <div
+              key={key}
+              style={{
+                position: 'absolute',
+                top: initialLayout[key].y,
+                left: initialLayout[key].x,
+                width: initialLayout[key].width,
+                height: initialLayout[key].height,
+                border: '1px solid black',
+              }}
+            >
+              {components[key]}
+            </div>
+          ))}
+        </SortableContext>
+      </DndContext>
+    </DashboardLayout>
   );
 };
 
-export default DashboardPage;
+export default Page;
