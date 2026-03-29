@@ -129,7 +129,7 @@ const App = () => {
       {showTutorial && (
         <div
           style={{
-            position: 'absolute',
+            position: 'fixed',
             top: 0,
             left: 0,
             width: '100%',
@@ -143,9 +143,9 @@ const App = () => {
           <div
             style={{
               backgroundColor: 'white',
-              padding: 20,
-              borderRadius: 10,
-              boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+              padding: '20px',
+              borderRadius: '10px',
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
             }}
           >
             <h2>{tutorialSteps[currentStep].title}</h2>
@@ -155,32 +155,23 @@ const App = () => {
           </div>
         </div>
       )}
-      <DndContext collisionDetection={closestCenter}>
+      <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={Object.keys(initialLayout)} strategy={rectSortingStrategy}>
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: '100vh',
-              overflow: 'auto',
-            }}
-          >
-            {Object.keys(initialLayout).map((key) => (
-              <div
-                key={key}
-                style={{
-                  position: 'absolute',
-                  top: initialLayout[key].y,
-                  left: initialLayout[key].x,
-                  width: initialLayout[key].width,
-                  height: initialLayout[key].height,
-                  border: '1px solid black',
-                }}
-              >
-                {components[key]}
-              </div>
-            ))}
-          </div>
+          {Object.keys(initialLayout).map((key, index) => (
+            <div
+              key={key}
+              style={{
+                position: 'absolute',
+                top: initialLayout[key].y,
+                left: initialLayout[key].x,
+                width: initialLayout[key].width,
+                height: initialLayout[key].height,
+                border: '1px solid black',
+              }}
+            >
+              {components[key]}
+            </div>
+          ))}
         </SortableContext>
       </DndContext>
     </DashboardLayout>

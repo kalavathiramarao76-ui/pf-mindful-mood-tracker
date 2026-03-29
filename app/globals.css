@@ -172,28 +172,4 @@
     background-color: var(--high-contrast-mode-bg);
     color: var(--high-contrast-mode-text);
   }
-
-  .high-contrast-mode .btn-primary {
-    background-color: var(--high-contrast-mode-primary-color);
-    color: var(--high-contrast-mode-bg);
-  }
-
-  .high-contrast-mode .btn-secondary {
-    background-color: var(--high-contrast-mode-secondary-color);
-    color: var(--high-contrast-mode-bg);
-  }
-
-  .high-contrast-mode a {
-    color: var(--high-contrast-mode-text);
-  }
-
-  /* Added high contrast mode support for images */
-  .high-contrast-mode img {
-    filter: invert(100%);
-  }
-
-  /* Added high contrast mode support for SVGs */
-  .high-contrast-mode svg {
-    filter: invert(100%);
-  }
 }
