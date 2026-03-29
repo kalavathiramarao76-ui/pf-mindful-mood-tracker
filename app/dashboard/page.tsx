@@ -105,47 +105,37 @@ const initialLayout: Layout = {
   recommendations: { x: 300, y: 0, width: 300, height: 200 },
   goals: { x: 0, y: 200, width: 300, height: 200 },
   community: { x: 300, y: 200, width: 300, height: 200 },
-  settings: { x: 0, y: 400, width: 300, height: 200 },
+  settings: { x: 600, y: 0, width: 300, height: 400 },
 };
 
-const Page = () => {
+const DashboardPage = () => {
   const [layout, setLayout] = useState(initialLayout);
 
   const handleDragEnd = (event: any) => {
     const { id, x, y } = event;
-    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x, y, width: prevLayout[id].width, height: prevLayout[id].height } }));
-  };
-
-  const handleResize = (id: string, width: number, height: number) => {
-    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x: prevLayout[id].x, y: prevLayout[id].y, width, height } }));
+    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x, y, width: 300, height: 200 } }));
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <SortableContext items={Object.keys(layout)} strategy={rectSortingStrategy}>
-        <DashboardLayout>
+    <DashboardLayout>
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={Object.keys(layout)} strategy={rectSortingStrategy}>
           {Object.keys(layout).map((id) => (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                top: layout[id].y,
-                left: layout[id].x,
-                width: layout[id].width,
-                height: layout[id].height,
-                border: '1px solid black',
-                resize: 'both',
-                overflow: 'auto',
-              }}
-              onResize={(e) => handleResize(id, e.target.offsetWidth, e.target.offsetHeight)}
-            >
-              {components[id]}
+            <div key={id} style={{ position: 'absolute', left: layout[id].x, top: layout[id].y, width: 300, height: 200 }}>
+              {components[id as keyof typeof components]}
             </div>
           ))}
-        </DashboardLayout>
-      </SortableContext>
-    </DndContext>
+        </SortableContext>
+        <DragOverlay>
+          {({ dragging }) =>
+            dragging ? (
+              <div style={{ position: 'absolute', left: dragging.x, top: dragging.y, width: 300, height: 200, backgroundColor: 'rgba(0, 0, 0, 0.5)' }} />
+            ) : null
+          }
+        </DragOverlay>
+      </DndContext>
+    </DashboardLayout>
   );
 };
 
-export default Page;
+export default DashboardPage;

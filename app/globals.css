@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #ccc;
+  --dark-mode-bg: #1a1d23;
+  --dark-mode-text: #fff;
+  --light-mode-bg: #fff;
+  --light-mode-text: #333;
+}
+
 @layer base {
   html {
     @apply scroll-smooth;
@@ -64,31 +73,45 @@
   }
 
   .btn-primary {
-    @apply bg-blue-500 hover:bg-blue-700 text-white;
+    background-color: var(--primary-color);
+    color: #fff;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  .btn-primary:hover {
+    background-color: #2ecc71;
   }
 
   .btn-primary:focus {
-    outline: 2px solid #3498db;
-    box-shadow: 0 0 0 2px #3498db;
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
   }
 
   .btn-secondary {
-    @apply bg-gray-300 hover:bg-gray-400 text-gray-900;
+    background-color: #ccc;
+    color: #333;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  .btn-secondary:hover {
+    background-color: #aaa;
   }
 
   .btn-secondary:focus {
-    outline: 2px solid #ccc;
-    box-shadow: 0 0 0 2px #ccc;
+    outline: 2px solid var(--secondary-color);
+    box-shadow: 0 0 0 2px var(--secondary-color);
   }
 }
 
 @layer utilities {
   .dark-mode {
-    @apply bg-gray-900 text-gray-100;
+    background-color: var(--dark-mode-bg);
+    color: var(--dark-mode-text);
   }
 
   .light-mode {
-    @apply bg-white text-gray-900;
+    background-color: var(--light-mode-bg);
+    color: var(--light-mode-text);
   }
 }
 
@@ -133,9 +156,3 @@
 <meta http-equiv="Cache-Control" content="max-age=31536000, public" />
 <meta http-equiv="Expires" content="Fri, 01 Jan 2038 00:00:00 GMT" />
 <meta name="og:title" content="MoodWave: Personalized Mental Wellness">
-<meta name="og:description" content="MoodWave: Personalized Mental Wellness, a platform for tracking and improving mental health through personalized recommendations and mood tracking tools.">
-<meta name="og:image" content="https://moodwave.com/favicon.png">
-<meta name="og:url" content="https://moodwave.com">
-<meta name="og:site_name" content="MoodWave">
-<meta name="og:locale" content="en_US">
-<meta name="og:type" content="website">
