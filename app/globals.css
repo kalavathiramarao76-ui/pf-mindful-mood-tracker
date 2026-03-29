@@ -9,6 +9,10 @@
   --dark-mode-text: #fff;
   --light-mode-bg: #fff;
   --light-mode-text: #333;
+  --high-contrast-mode-bg: #000;
+  --high-contrast-mode-text: #fff;
+  --high-contrast-mode-primary-color: #fff;
+  --high-contrast-mode-secondary-color: #ccc;
 }
 
 @layer base {
@@ -24,6 +28,11 @@
 
   a {
     @apply text-blue-500 hover:text-blue-700;
+  }
+
+  a:focus {
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -60,6 +69,11 @@
 
   button[aria-label] {
     font-size: 1rem;
+  }
+
+  button:focus {
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
   }
 }
 
@@ -113,6 +127,21 @@
     background-color: var(--light-mode-bg);
     color: var(--light-mode-text);
   }
+
+  .high-contrast-mode {
+    background-color: var(--high-contrast-mode-bg);
+    color: var(--high-contrast-mode-text);
+  }
+
+  .high-contrast-mode .btn-primary {
+    background-color: var(--high-contrast-mode-primary-color);
+    color: var(--high-contrast-mode-bg);
+  }
+
+  .high-contrast-mode .btn-secondary {
+    background-color: var(--high-contrast-mode-secondary-color);
+    color: var(--high-contrast-mode-bg);
+  }
 }
 
 @font-face {
@@ -147,12 +176,4 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="title" content="MoodWave: Personalized Mental Wellness">
 <meta name="description" content="MoodWave: Personalized Mental Wellness, a platform for tracking and improving mental health through personalized recommendations and mood tracking tools.">
-<meta name="keywords" content="mental wellness, mood tracking, personalized wellness, mental health, self-care, mindfulness, stress management">
-<meta name="author" content="MoodWave Team">
-<meta name="robots" content="index, follow">
-<meta name="theme-color" content="#3498db">
-<link rel="icon" type="image/png" href="/favicon.png">
-<link rel="canonical" href="https://moodwave.com" />
-<meta http-equiv="Cache-Control" content="max-age=31536000, public" />
-<meta http-equiv="Expires" content="Fri, 01 Jan 2038 00:00:00 GMT" />
-<meta name="og:title" content="MoodWave: Personalized Mental Wellness">
+<meta name="keywords" content="mental health, wellness, mood tracking, personalized recommendations">

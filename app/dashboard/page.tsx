@@ -105,37 +105,81 @@ const initialLayout: Layout = {
   recommendations: { x: 300, y: 0, width: 300, height: 200 },
   goals: { x: 0, y: 200, width: 300, height: 200 },
   community: { x: 300, y: 200, width: 300, height: 200 },
-  settings: { x: 600, y: 0, width: 300, height: 400 },
+  settings: { x: 0, y: 400, width: 300, height: 200 },
 };
 
-const DashboardPage = () => {
-  const [layout, setLayout] = useState(initialLayout);
+const Page = () => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(true);
 
-  const handleDragEnd = (event: any) => {
-    const { id, x, y } = event;
-    setLayout((prevLayout) => ({ ...prevLayout, [id]: { x, y, width: 300, height: 200 } }));
+  const handleNextStep = () => {
+    if (currentStep < tutorialSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      setShowTutorial(false);
+    }
+  };
+
+  const handleSkipTutorial = () => {
+    setShowTutorial(false);
   };
 
   return (
     <DashboardLayout>
-      <DndContext onDragEnd={handleDragEnd}>
-        <SortableContext items={Object.keys(layout)} strategy={rectSortingStrategy}>
-          {Object.keys(layout).map((id) => (
-            <div key={id} style={{ position: 'absolute', left: layout[id].x, top: layout[id].y, width: 300, height: 200 }}>
-              {components[id as keyof typeof components]}
+      {showTutorial && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              padding: '20px',
+              borderRadius: '10px',
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h2>{tutorialSteps[currentStep].title}</h2>
+            <p>{tutorialSteps[currentStep].description}</p>
+            <button onClick={handleNextStep}>Next</button>
+            <button onClick={handleSkipTutorial}>Skip Tutorial</button>
+          </div>
+        </div>
+      )}
+      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+        <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
+          {Object.keys(components).map((component, index) => (
+            <div key={component} style={initialLayout[component]}>
+              <components[component] />
             </div>
           ))}
         </SortableContext>
         <DragOverlay>
-          {({ dragging }) =>
-            dragging ? (
-              <div style={{ position: 'absolute', left: dragging.x, top: dragging.y, width: 300, height: 200, backgroundColor: 'rgba(0, 0, 0, 0.5)' }} />
-            ) : null
-          }
+          {activeId && (
+            <div
+              style={{
+                width: '100px',
+                height: '100px',
+                backgroundColor: 'gray',
+                opacity: 0.5,
+              }}
+            >
+              {components[activeId]}
+            </div>
+          )}
         </DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
 };
 
-export default DashboardPage;
+export default Page;
