@@ -108,7 +108,7 @@ const initialLayout: Layout = {
   settings: { x: 0, y: 400, width: 300, height: 200 },
 };
 
-const App = () => {
+const Page = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
 
@@ -129,7 +129,7 @@ const App = () => {
       {showTutorial && (
         <div
           style={{
-            position: 'fixed',
+            position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
@@ -143,8 +143,8 @@ const App = () => {
           <div
             style={{
               backgroundColor: 'white',
-              padding: '20px',
-              borderRadius: '10px',
+              padding: 20,
+              borderRadius: 10,
               boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
             }}
           >
@@ -155,27 +155,36 @@ const App = () => {
           </div>
         </div>
       )}
-      <DndContext onDragEnd={handleDragEnd}>
+      <DndContext collisionDetection={closestCenter}>
         <SortableContext items={Object.keys(initialLayout)} strategy={rectSortingStrategy}>
-          {Object.keys(initialLayout).map((key, index) => (
-            <div
-              key={key}
-              style={{
-                position: 'absolute',
-                top: initialLayout[key].y,
-                left: initialLayout[key].x,
-                width: initialLayout[key].width,
-                height: initialLayout[key].height,
-                border: '1px solid black',
-              }}
-            >
-              {components[key]}
-            </div>
-          ))}
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100vh',
+              overflow: 'auto',
+            }}
+          >
+            {Object.keys(initialLayout).map((key) => (
+              <div
+                key={key}
+                style={{
+                  position: 'absolute',
+                  top: initialLayout[key].y,
+                  left: initialLayout[key].x,
+                  width: initialLayout[key].width,
+                  height: initialLayout[key].height,
+                  border: '1px solid black',
+                }}
+              >
+                {components[key]}
+              </div>
+            ))}
+          </div>
         </SortableContext>
       </DndContext>
     </DashboardLayout>
   );
 };
 
-export default App;
+export default Page;

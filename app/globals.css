@@ -163,46 +163,28 @@
     color: var(--high-contrast-mode-text);
   }
 
-  .high-contrast-mode a:hover {
-    color: var(--high-contrast-mode-primary-color);
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
-  .high-contrast-mode input {
-    background-color: var(--high-contrast-mode-bg);
-    color: var(--high-contrast-mode-text);
+  .sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0.5rem;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
   }
-
-  .high-contrast-mode select {
-    background-color: var(--high-contrast-mode-bg);
-    color: var(--high-contrast-mode-text);
-  }
-
-  .high-contrast-mode textarea {
-    background-color: var(--high-contrast-mode-bg);
-    color: var(--high-contrast-mode-text);
-  }
-}
-
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/Inter-Regular.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('/fonts/Inter-SemiBold.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/Inter-Bold.woff2') format('woff2');
 }
