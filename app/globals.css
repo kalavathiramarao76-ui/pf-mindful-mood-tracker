@@ -91,6 +91,30 @@
     outline: 2px solid var(--primary-color);
     box-shadow: 0 0 0 2px var(--primary-color);
   }
+
+  /* Added screen reader support */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: auto;
+    margin: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
 }
 
 @layer components {
@@ -163,28 +187,13 @@
     color: var(--high-contrast-mode-text);
   }
 
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  /* Added high contrast mode support for images */
+  .high-contrast-mode img {
+    filter: invert(100%);
   }
 
-  .sr-only:focus {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: 0.5rem;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-    border: 2px solid var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-color);
+  /* Added high contrast mode support for SVGs */
+  .high-contrast-mode svg {
+    filter: invert(100%);
   }
 }

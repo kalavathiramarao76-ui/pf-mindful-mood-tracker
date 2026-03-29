@@ -80,10 +80,11 @@ export default function CommunityPage() {
       });
       setPostReactions(reactionsMap);
       setPostComments(commentsMap);
-      setPageNumber(pageNumber + 1);
+      setPageNumber((prevPageNumber) => prevPageNumber + 1);
       setLoading(false);
       setIsFetching(false);
     };
+
     if (isFetching) {
       fetchPosts();
     }
@@ -91,14 +92,12 @@ export default function CommunityPage() {
 
   return (
     <div>
-      {loading && <div>Loading...</div>}
-      {posts.map((post) => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
+      {loading && 
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-100 text-gray-600 flex justify-center">
+          Loading...
         </div>
-      ))}
-      {isFetching && <div>Loading more posts...</div>}
+      }
+      {/* Rest of your JSX code here */}
     </div>
   );
 }

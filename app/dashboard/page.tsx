@@ -108,7 +108,7 @@ const initialLayout: Layout = {
   settings: { x: 0, y: 400, width: 300, height: 200 },
 };
 
-const Page = () => {
+const App = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
 
@@ -145,13 +145,13 @@ const Page = () => {
               backgroundColor: 'white',
               padding: 20,
               borderRadius: 10,
-              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+              boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
             }}
           >
             <h2>{tutorialSteps[currentStep].title}</h2>
             <p>{tutorialSteps[currentStep].description}</p>
             <button onClick={handleNextStep}>Next</button>
-            <button onClick={handleSkipTutorial}>Skip Tutorial</button>
+            <button onClick={handleSkipTutorial}>Skip</button>
           </div>
         </div>
       )}
@@ -187,4 +187,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default App;
