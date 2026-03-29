@@ -100,66 +100,191 @@ const components = {
   settings: loadComponent('settings'),
 };
 
+const initialLayout: Layout = {
+  moodTracker: { x: 0, y: 0, width: 300, height: 200 },
+  recommendations: { x: 300, y: 0, width: 300, height: 200 },
+  goals: { x: 0, y: 200, width: 300, height: 200 },
+  community: { x: 300, y: 200, width: 300, height: 200 },
+  settings: { x: 0, y: 400, width: 300, height: 200 },
+};
+
+const initialComponents = {
+  moodTracker: {
+    id: 'moodTracker',
+    component: <LazyMoodTracker />,
+    removable: false,
+    resizable: true,
+  },
+  recommendations: {
+    id: 'recommendations',
+    component: <LazyRecommendations />,
+    removable: false,
+    resizable: true,
+  },
+  goals: {
+    id: 'goals',
+    component: <LazyGoals />,
+    removable: false,
+    resizable: true,
+  },
+  community: {
+    id: 'community',
+    component: <LazyCommunity />,
+    removable: false,
+    resizable: true,
+  },
+  settings: {
+    id: 'settings',
+    component: <LazySettings />,
+    removable: false,
+    resizable: true,
+  },
+};
+
+const initialDashboardConfig: DashboardConfig = {
+  layout: initialLayout,
+  components: initialComponents,
+  breakpoints: {},
+};
+
 const DashboardPage = () => {
   const [activeComponent, setActiveComponent] = useState('moodTracker');
-  const [showTutorial, setShowTutorial] = useState(true);
-  const [currentTutorialStep, setCurrentTutorialStep] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [dashboardConfig, setDashboardConfig] = useState(initialDashboardConfig);
 
-  const handleTutorialNext = () => {
-    if (currentTutorialStep < tutorialSteps.length - 1) {
-      setCurrentTutorialStep(currentTutorialStep + 1);
-    } else {
-      setShowTutorial(false);
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setDashboardConfig((prevConfig) => {
+        const newLayout = { ...prevConfig.layout };
+        const newComponents = { ...prevConfig.components };
+        const activeComponent = newComponents[active.id];
+        const overComponent = newComponents[over.id];
+        newLayout[active.id] = overComponent.layout;
+        newLayout[over.id] = activeComponent.layout;
+        return { ...prevConfig, layout: newLayout };
+      });
     }
   };
 
-  const handleTutorialSkip = () => {
-    setShowTutorial(false);
+  const handleResize = (id: string, newDimensions: { width: number; height: number }) => {
+    setDashboardConfig((prevConfig) => {
+      const newLayout = { ...prevConfig.layout };
+      newLayout[id] = { ...newLayout[id], ...newDimensions };
+      return { ...prevConfig, layout: newLayout };
+    });
+  };
+
+  const handleRemove = (id: string) => {
+    setDashboardConfig((prevConfig) => {
+      const newComponents = { ...prevConfig.components };
+      delete newComponents[id];
+      const newLayout = { ...prevConfig.layout };
+      delete newLayout[id];
+      return { ...prevConfig, components: newComponents, layout: newLayout };
+    });
+  };
+
+  const handleAdd = (id: string) => {
+    setDashboardConfig((prevConfig) => {
+      const newComponents = { ...prevConfig.components };
+      newComponents[id] = {
+        id,
+        component: components[id],
+        removable: true,
+        resizable: true,
+      };
+      const newLayout = { ...prevConfig.layout };
+      newLayout[id] = { x: 0, y: 0, width: 300, height: 200 };
+      return { ...prevConfig, components: newComponents, layout: newLayout };
+    });
   };
 
   return (
-    <DashboardLayout>
-      {showTutorial && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              padding: '20px',
-              borderRadius: '10px',
-              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
-            }}
-          >
-            <h2>{tutorialSteps[currentTutorialStep].title}</h2>
-            <p>{tutorialSteps[currentTutorialStep].description}</p>
-            <button onClick={handleTutorialNext}>Next</button>
-            <button onClick={handleTutorialSkip}>Skip</button>
-          </div>
-        </div>
-      )}
-      <DndContext collisionDetection={closestCenter}>
-        <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
-          {Object.keys(components).map((component, index) => (
-            <div key={component} style={{ width: '100%', height: '100%' }}>
-              <Suspense fallback={<div>Loading...</div>}>
-                {components[component]}
-              </Suspense>
+    <DndContext onDragEnd={handleDragEnd}>
+      <SortableContext items={Object.keys(dashboardConfig.components)} strategy={rectSortingStrategy}>
+        <DashboardLayout>
+          {Object.keys(dashboardConfig.components).map((id) => (
+            <div
+              key={id}
+              style={{
+                position: 'absolute',
+                left: dashboardConfig.layout[id].x,
+                top: dashboardConfig.layout[id].y,
+                width: dashboardConfig.layout[id].width,
+                height: dashboardConfig.layout[id].height,
+              }}
+            >
+              {dashboardConfig.components[id].component}
+              {dashboardConfig.components[id].resizable && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: 10,
+                    height: 10,
+                    backgroundColor: 'gray',
+                    cursor: 'nwse-resize',
+                  }}
+                  onMouseDown={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    const startX = event.clientX;
+                    const startY = event.clientY;
+                    const startWidth = rect.width;
+                    const startHeight = rect.height;
+                    const handleMouseMove = (event: any) => {
+                      const newWidth = startWidth + (event.clientX - startX);
+                      const newHeight = startHeight + (event.clientY - startY);
+                      handleResize(id, { width: newWidth, height: newHeight });
+                    };
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                  }}
+                />
+              )}
+              {dashboardConfig.components[id].removable && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: 10,
+                    height: 10,
+                    backgroundColor: 'red',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => handleRemove(id)}
+                >
+                  X
+                </div>
+              )}
             </div>
           ))}
-        </SortableContext>
-      </DndContext>
-    </DashboardLayout>
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              padding: 10,
+              backgroundColor: 'white',
+              border: '1px solid gray',
+            }}
+          >
+            <button onClick={() => handleAdd('moodTracker')}>Add Mood Tracker</button>
+            <button onClick={() => handleAdd('recommendations')}>Add Recommendations</button>
+            <button onClick={() => handleAdd('goals')}>Add Goals</button>
+            <button onClick={() => handleAdd('community')}>Add Community</button>
+            <button onClick={() => handleAdd('settings')}>Add Settings</button>
+          </div>
+        </DashboardLayout>
+      </SortableContext>
+    </DndContext>
   );
 };
 
