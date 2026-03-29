@@ -13,6 +13,7 @@
   --high-contrast-mode-text: #fff;
   --high-contrast-mode-primary-color: #fff;
   --high-contrast-mode-secondary-color: #ccc;
+  --focus-color: #fff;
 }
 
 @layer base {
@@ -72,6 +73,21 @@
   }
 
   button:focus {
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+  }
+
+  input:focus {
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+  }
+
+  select:focus {
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+  }
+
+  textarea:focus {
     outline: 2px solid var(--primary-color);
     box-shadow: 0 0 0 2px var(--primary-color);
   }
@@ -142,6 +158,29 @@
     background-color: var(--high-contrast-mode-secondary-color);
     color: var(--high-contrast-mode-bg);
   }
+
+  .high-contrast-mode a {
+    color: var(--high-contrast-mode-text);
+  }
+
+  .high-contrast-mode a:hover {
+    color: var(--high-contrast-mode-primary-color);
+  }
+
+  .high-contrast-mode input {
+    background-color: var(--high-contrast-mode-bg);
+    color: var(--high-contrast-mode-text);
+  }
+
+  .high-contrast-mode select {
+    background-color: var(--high-contrast-mode-bg);
+    color: var(--high-contrast-mode-text);
+  }
+
+  .high-contrast-mode textarea {
+    background-color: var(--high-contrast-mode-bg);
+    color: var(--high-contrast-mode-text);
+  }
 }
 
 @font-face {
@@ -167,13 +206,3 @@
   font-display: swap;
   src: url('/fonts/Inter-Bold.woff2') format('woff2');
 }
-
-<link rel="preload" href="/fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous" load="fetch">
-<link rel="preload" href="/fonts/Inter-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous" load="fetch">
-<link rel="preload" href="/fonts/Inter-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous" load="fetch">
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="title" content="MoodWave: Personalized Mental Wellness">
-<meta name="description" content="MoodWave: Personalized Mental Wellness, a platform for tracking and improving mental health through personalized recommendations and mood tracking tools.">
-<meta name="keywords" content="mental health, wellness, mood tracking, personalized recommendations">

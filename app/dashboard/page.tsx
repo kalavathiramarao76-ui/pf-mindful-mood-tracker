@@ -108,7 +108,7 @@ const initialLayout: Layout = {
   settings: { x: 0, y: 400, width: 300, height: 200 },
 };
 
-const Page = () => {
+const App = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
 
@@ -129,7 +129,7 @@ const Page = () => {
       {showTutorial && (
         <div
           style={{
-            position: 'absolute',
+            position: 'fixed',
             top: 0,
             left: 0,
             width: '100%',
@@ -155,31 +155,27 @@ const Page = () => {
           </div>
         </div>
       )}
-      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
-        <SortableContext items={Object.keys(components)} strategy={rectSortingStrategy}>
-          {Object.keys(components).map((component, index) => (
-            <div key={component} style={initialLayout[component]}>
-              <components[component] />
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={Object.keys(initialLayout)} strategy={rectSortingStrategy}>
+          {Object.keys(initialLayout).map((key, index) => (
+            <div
+              key={key}
+              style={{
+                position: 'absolute',
+                top: initialLayout[key].y,
+                left: initialLayout[key].x,
+                width: initialLayout[key].width,
+                height: initialLayout[key].height,
+                border: '1px solid black',
+              }}
+            >
+              {components[key]}
             </div>
           ))}
         </SortableContext>
-        <DragOverlay>
-          {activeId && (
-            <div
-              style={{
-                width: '100px',
-                height: '100px',
-                backgroundColor: 'gray',
-                opacity: 0.5,
-              }}
-            >
-              {components[activeId]}
-            </div>
-          )}
-        </DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
 };
 
-export default Page;
+export default App;
